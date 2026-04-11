@@ -1,104 +1,63 @@
-= RSR Template Repository
-:toc: preamble
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= katagoria — Type Theory Research Origination
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
 :icons: font
 
-image:https://www.bestpractices.dev/projects/{{OPENSSF_PROJECT_ID}}/badge[OpenSSF Best Practices, link="https://www.bestpractices.dev/projects/{{OPENSSF_PROJECT_ID}}"]
-image:https://api.securityscorecards.dev/projects/github.com/{{OWNER}}/{{REPO}}/badge[OpenSSF Scorecard, link="https://securityscorecards.dev/viewer/?uri=github.com/{{OWNER}}/{{REPO}}"]
-
-[NOTE]
+[TIP]
 ====
-This repository is a template. Placeholder tokens like `{{OWNER}}`, `{{REPO}}`,
-and `{{PROJECT_NAME}}` are expected before running `just init`.
+*AI agents:* read `0-AI-MANIFEST.a2ml` first, then `.machine_readable/6a2/STATE.a2ml`.
 ====
 
-== Overview
+== What This Is
 
-This template now uses a split maintenance model:
+`katagoria` is the research origination space for the hyperpolymath type theory
+pipeline.  It is where type theory ideas are explored *before* being promoted
+to a production repo.
 
-* Authoritative session protocols live centrally in `standards/session-management-standards`.
-* This repo keeps only thin local integration (Justfile aliases, local hooks,
-  coordination bindings, and repo-local checks).
-* Runtime session artifacts are generated per working repository in `.session/`.
+== Pipeline Position
 
-== Session Management Integration
-
-Canonical command model:
-
-* `intake repo <path>`
-* `checkpoint change <path>`
-* `verify maintenance <path>`
-* `verify substantial <path>`
-* `verify release <path>`
-* `close planned <path>`
-* `close urgent <path>`
-* `recover repo <path>`
-* `handover full <path>`
-* `handover split <path>`
-* `handover model <path>`
-* `handover human <path>`
-
-Local binding files in this template:
-
-* `session/dispatch.sh`
-* `session/custom-checks.k9`
-* `session/local-hooks.sh`
-* `session/README.md`
-* `coordination.k9`
-
-Run `just session-help` for local aliases.
-
-== ABI/FFI Seam Layout
-
-The template keeps a verified interface seam split:
-
-* ABI (Idris2): `src/interface/Abi/*.idr`
-* FFI (Zig): `src/interface/ffi/src/*.zig`
-* Generated artifacts: `src/interface/generated/`
-
-== Repository Layout
-
-[cols="1,3"]
-|===
-| Path | Purpose
-
-| `.machine_readable/`
-| Machine-readable policy and project metadata.
-
-| `session/`
-| Thin local bindings to central session-management standards.
-
-| `coordination.k9`
-| Local coordination wiring to canonical session commands.
-
-| `docs/`
-| Human-facing technical and governance documentation.
-
-| `src/interface/`
-| ABI/FFI/generated seam scaffolding.
-
-| `verification/`
-| Proof and verification scaffolding.
-|===
-
-== Quick Start
-
-[source,bash]
 ----
-just init
-just verify
-just session-help
+katagoria  →  typell  →  typed-wasm  →  PanLL
+(this repo)   (kernel)   (target)    (eNSAID env)
 ----
 
-== Documentation
+`katagoria` is upstream of everything.  Ideas here are *speculative*:
+proofs-of-concept, reading notes, prototype Idris2/Lean formalizations.  They
+graduate to `typell` when they are ready to be integrated into the production
+verification kernel.
 
-* link:AUDIT.adoc[AUDIT.adoc] -- local audit gate summary
-* link:EXPLAINME.adoc[EXPLAINME.adoc] -- template claim-to-implementation map
-* link:session/README.md[session/README.md] -- session binding usage
-* link:docs/governance/README.adoc[docs/governance/README.adoc] -- governance docs index
-* link:CONTRIBUTING.md[CONTRIBUTING.md]
-* link:SECURITY.md[SECURITY.md]
+Coordination monorepo: https://github.com/hyperpolymath/nextgen-typing[nextgen-typing]
+
+== What Lives Here
+
+* Type theory prototypes — Idris2, Lean 4, Agda proofs-of-concept
+* Research notes on papers being read and formalized
+* Experimental level definitions for the TypeLL open-ended progression
+* Speculative session type extensions (multi-party, probabilistic, temporal)
+* Tropical type theory experiments (connections to protocol-squisher)
+
+== What Does NOT Live Here
+
+* Production Rust code — goes in `typell`
+* WasmGC type safety proofs — goes in `typed-wasm`
+* Anything with stability guarantees — this repo is deliberately unstable
+
+== Relationship to TypeLL
+
+TypeLL is an *open-ended progressive* type safety framework.  The current
+L1-L10 implementation in typell was designed here first, then graduated.
+Future levels (L11, L12, ...) will originate here before promotion.
+
+There is no fixed ceiling.  katagoria is where the ceiling gets pushed.
+
+== Status
+
+Pre-alpha.  Newly created (2026-04-11).  Research artefacts will accumulate over time.
 
 == License
 
-SPDX-License-Identifier: PMPL-1.0-or-later
-See link:LICENSE[LICENSE].
+PMPL-1.0-or-later
+
+Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>

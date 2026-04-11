@@ -1,61 +1,33 @@
-# RSR Template AI Manifest (Read First)
+# katagoria AI Manifest (Read First)
+# SPDX-License-Identifier: PMPL-1.0-or-later
 
-This is the root AI manifest for the template repository.
+## What This Repo Is
 
-## Template Status
+`katagoria` is the **research origination space** for the type theory pipeline.
 
-This repository intentionally contains template placeholders before bootstrap.
-Examples: `{{OWNER}}`, `{{REPO}}`, `{{PROJECT_NAME}}`, `[YOUR-REPO-NAME]`.
+Pipeline:  **katagoria** → typell → typed-wasm → PanLL
 
-Do not invent project-specific values unless the operator runs template
-initialization (for example `just init`) or explicitly provides values.
+This repo is deliberately unstable — it is where speculative ideas live before
+promotion to production.  Do not expect stability or completeness here.
 
-## Authority Split
+## Critical Invariants
 
-- Central protocol authority:
-  `standards/session-management-standards/`
-- Local integration authority (this repo):
-  - `Justfile` session recipes
-  - `session/dispatch.sh`
-  - `session/custom-checks.k9`
-  - `session/local-hooks.sh`
-  - `coordination.k9`
+1. **Research only** — no production Rust, no compiler code. That goes in `typell`.
+2. **No stability guarantees** — artefacts here may change or be discarded.
+3. **Graduation path** — ideas ready for production are promoted to `typell`.
+   When an artefact graduates, it is removed here and added to typell.
+4. **TypeLL is open-ended** — the L1-L10 mapping in typell is the initial
+   implementation. L11+ candidates originate here.
 
-## Canonical Session Commands
+## Canonical Locations
 
-- `intake repo <path>`
-- `checkpoint change <path>`
-- `verify maintenance <path>`
-- `verify substantial <path>`
-- `verify release <path>`
-- `close planned <path>`
-- `close urgent <path>`
-- `recover repo <path>`
-- `handover full <path>`
-- `handover split <path>`
-- `handover model <path>`
-- `handover human <path>`
+- Pipeline architecture: see `nextgen-typing/docs/ARCHITECTURE.adoc`
+- Current state: `.machine_readable/6a2/STATE.a2ml`
+- Research artefacts: `research/` (to be created as needed)
 
-## Core Invariants
+## Startup Sequence For AI Agents
 
-1. Keep protocol text centralized; do not duplicate full protocol specs here.
-2. Keep local policy and hook behavior local to this repo.
-3. Write runtime session artifacts in working repos (typically `.session/`).
-4. Keep README/AUDIT/manifest claims synchronized with actual files.
-5. Mark stubs and placeholders explicitly.
-
-## Key Local Files
-
-- `AUDIT.adoc` (local audit gate summary)
-- `README.adoc` (template orientation)
-- `EXPLAINME.adoc` (claim-to-implementation map)
-- `session/README.md` (session-binding usage)
-- `.machine_readable/` (machine-readable repo policy/state files)
-
-## Startup Checklist For Agents
-
-1. Read `0-AI-MANIFEST.a2ml`.
-2. Read `AUDIT.adoc`.
-3. Confirm whether placeholders have been initialized.
-4. Use canonical session commands through `session/dispatch.sh` or Just aliases.
-5. Avoid claiming files/paths exist unless verified in this repository.
+1. Read this manifest.
+2. Read `.machine_readable/6a2/STATE.a2ml`.
+3. Check `research/` for existing artefacts.
+4. Any production-ready work should be proposed for promotion to `typell`.
