@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Tropical Type Theory — Research Notes
+:toc:
+:icons: font
+
+Research origination for the tropical semiring layer of the TypeLL pipeline.
+Connects to `tropical-resource-typing` (Isabelle mechanisation) and targets
+graduation to `typell` / `typed-wasm`.
+
+== What This Is
+
+Tropical semirings (max-plus and min-plus) provide a compositional algebra for
+tracking resource bounds and access costs in type systems.  Two complementary
+uses in the pipeline:
+
+* **Max-plus (throughput)** — used in session-type protocol resource typing.
+  Formalised in Isabelle in `hyperpolymath/tropical-resource-typing`.
+  The star `A*` computes the maximum-weight simple-path matrix: under
+  `no_pos_cycle`, `A*(i,j)` = the heaviest walk from `i` to `j`.
+
+* **Min-plus (latency)** — used in typed-wasm L11 cost-tracking.
+  `A*(i,j)` = the cheapest access path from field `i` to field `j`.
+  Same algebra, dual order.
+
+Both are instances of the same abstract closed semiring.  The Isabelle proofs
+cover max-plus; by duality they imply min-plus.
+
+== Completed Isabelle Foundation (tropical-resource-typing)
+
+All proofs in `tropical-resource-typing` are now complete (2026-04-11).  Key
+results available as a proven foundation:
+
+|===
+| Theorem | Statement | File
+
+| `trop_mat_star_equation`
+| `A* = I ⊕ A·A*` (under `no_pos_cycle`)
+| `Tropical_Kleene.thy`
+
+| `trop_mat_star_least_prefixpoint`
+| `A*` is the least solution to `X ≥ I ⊕ A·X`
+| `Tropical_Kleene.thy`
+
+| `floyd_warshall_c`
+| `(I⊕A)^{n-1}` = max-weight simple-path matrix (under `no_pos_cycle`)
+| `Tropical_Matrices_Clean.thy`
+
+| `cycle_shortcutting_c`
+| Under `no_pos_cycle`, every walk dominated by a simple walk
+| `Tropical_Matrices_Clean.thy`
+
+| `trop_mat_star_idem`
+| `(A*)* = A*` (star is idempotent, pointwise in `{..<n}`)
+| `Tropical_CNO.thy`
+
+| `trop_cno_star`
+| The star operator is a closed normal order (CNO)
+| `Tropical_CNO.thy`
+
+| `trop_mat_star_sq`
+| `(A*)² = A*` (under `no_pos_cycle`, pointwise)
+| `Tropical_CNO.thy`
+|===
+
+== Idris2 Research Prototype
+
+`TropicalKleene.idr` contains:
+
+* Parametric tropical semiring over a carrier type (covers both min-plus and
+  max-plus as instances).
+* Matrix type and operations (multiply, power, star).
+* Key theorems postulated, with each postulate citing the corresponding
+  Isabelle proof in `tropical-resource-typing`.
+* Graduation blockers listed at the top of the file.
+
+== Graduation Path
+
+[options="header",cols="1,3"]
+|===
+| Step | Target
+
+| Research complete (this dir)
+| Idris2 proofs for star equation + least prefixpoint, no postulates
+
+| Graduate `TropicalKleene.idr`
+| `typell/src/abi/TropicalSemiring.idr` (abstract kernel)
+
+| Graduate L11 extension
+| `typed-wasm/src/abi/TypedWasm/ABI/Tropical.idr` (concrete min-plus)
+
+| Integrate with session types
+| `typell/src/kernel/session/TropicalBudget.idr` (resource-bounded sessions)
+|===
+
+The Isabelle proofs serve as the correctness reference throughout — Idris2
+proofs are the mechanised certification for the dependent-type ABI.
+
+== Open Questions
+
+. The star equation requires `no_pos_cycle` in the Isabelle proof.  What is
+  the Idris2 equivalent?  A type-level constraint on the matrix?  A proof
+  that the access graph is acyclic (for memory — it always is)?
+
+. In typed-wasm, the access graph between fields *is* always acyclic (no field
+  contains itself).  So `no_pos_cycle` is structurally guaranteed.  Can this
+  be encoded at the type level so the star equation holds unconditionally for
+  typed-wasm access matrices?
+
+. The CNO characterisation (`is_trop_cno`) relates to session-type normal forms.
+  Can it encode the "this session has been reduced to normal form" invariant in
+  a QTT context?
