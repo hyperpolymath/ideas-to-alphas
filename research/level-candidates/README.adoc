@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= TypeLL Level Candidates
+:toc:
+
+Proposed TypeLL levels beyond the current L1-L10 checked core in `typell`.
+TypeLL is open-ended — new levels are added when the type theory demands it.
+
+== Current Candidates
+
+_None yet.  First candidates to be added as research proceeds._
+
+== How to Propose a Level
+
+1. Create `L11-<name>/` (or next available number)
+2. Write a brief `MOTIVATION.adoc`: what problem does this level solve?
+   What type property does it enforce?  Where does it sit in the progression?
+3. Write an Idris2 or Lean 4 formalization sketch
+4. When the proof compiles with zero `believe_me`, open a PR on `typell`
+
+== Context
+
+The L1-L10 progression in `typell`:
+
+[cols="1,2"]
+|===
+| Level | TypeLL Concept
+
+| L1  | Well-formed AST (parse-time)
+| L2  | Named type resolution (schema-binding)
+| L3  | Unification + operator checking
+| L4  | Option types, totality checking (null-safety)
+| L5  | Refinement predicates (injection-proof)
+| L6  | Return type inference
+| L7  | Bounded quantifiers (cardinality)
+| L8  | Algebraic effects (effect-tracking)
+| L9  | Session types, state machines (temporal)
+| L10 | QTT bounded usage, linear types (linearity)
+| L11+| _Open — candidates live in this directory_
+|===

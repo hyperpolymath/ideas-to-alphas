@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= katagoria Research Artefacts
+:toc:
+
+This directory contains all research artefacts.  Everything here is
+*speculative and unstable*.  Artefacts graduate to `typell` or `typed-wasm`
+when they are ready for production.
+
+== Directory Structure
+
+[cols="1,2"]
+|===
+| Directory | Contents
+
+| `level-candidates/`
+| Proposed TypeLL level extensions beyond the current L1-L10.
+  Each candidate is a standalone Idris2 or Lean 4 formalization.
+  Candidates that pass review graduate to `typell/src/abi/`.
+
+| `session-types/`
+| Speculative session type extensions: multi-party, probabilistic,
+  temporal session types.  (To be created.)
+
+| `tropical/`
+| Tropical type theory explorations connecting to `tropical-resource-typing`
+  and `protocol-squisher`.  (To be created.)
+
+| `reading-notes/`
+| Notes on papers being read, with formalization sketches.  (To be created.)
+|===
+
+== Graduation Criteria
+
+An artefact graduates from katagoria to a production repo when:
+
+1. The Idris2/Lean proof compiles with zero `believe_me`
+2. The formalization matches a clear use case in the target repo
+3. At least one concrete test or example exists
+4. A PR is opened on the target repo with the artefact
+
+Until then, it lives here.
