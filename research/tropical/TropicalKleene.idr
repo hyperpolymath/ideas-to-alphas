@@ -387,10 +387,60 @@ matStar sr {n = S m} a =
         (allFins (S m))
 
 ||| Abstract no-positive-cycle predicate.
+||| For min-plus with Nat costs this is automatic (see noPosOycleAuto).
+||| For max-plus or abstract semirings it must be proved per-instance.
 public export
 NoPosOycle : (sr : ClosedSemiring a) -> {n : Nat} -> Matrix n a -> Type
 NoPosOycle sr {n} a =
   (i : Fin n) -> sr.add (matStar sr a i i) sr.one = sr.one
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Structural acyclicity: DAG matrices (typed-wasm field-access graph use case)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- For typed-wasm, the field-access relation is a DAG by construction:
+-- you cannot have circular field references (A.b.a where b : B, a : A would
+-- require A to contain B which contains A — rejected at schema declaration).
+-- A DAG matrix has edges only from strictly lower to strictly higher Fin index
+-- (upper-triangular with zero diagonal), which structurally prevents any
+-- closed walk, making NoPosOycle vacuously true.
+--
+-- This gives two paths to satisfy the NoPosOycle hypothesis in StarEquationAbs:
+--   (a) Predicate path: prove sr.add (matStar sr a i i) sr.one = sr.one directly.
+--   (b) Structural path: prove IsDAGMatrix sr a, then apply dagImpliesNoPosOycle.
+-- Path (b) is the correct one for typed-wasm field-access graphs.
+
+||| `IsDAGMatrix sr m`: every non-trivial edge in m goes from a strictly lower
+||| to a strictly higher index.  Equivalently, m is strictly upper-triangular:
+||| m(i, j) = sr.zero whenever i ≥ j (diagonal and below are all zero/identity).
+|||
+||| For typed-wasm: the field-access graph satisfies this because field schemas
+||| are declared in a total order — a struct's fields are enumerated once, and
+||| field offsets strictly increase.  There is no way to declare a field that
+||| "points back" to an earlier index without introducing a cycle, which the
+||| schema checker rejects.
+public export
+IsDAGMatrix : (sr : ClosedSemiring a) -> {n : Nat} -> Matrix n a -> Type
+IsDAGMatrix sr {n} m =
+  (i j : Fin n) -> finToNat i >= finToNat j -> m i j = sr.zero
+
+||| If a matrix is a DAG (strictly upper-triangular), it satisfies NoPosOycle.
+|||
+||| Proof sketch: all closed walks i → k₁ → k₂ → … → i must traverse edges
+||| that strictly increase the index, but a closed walk must return to i —
+||| contradiction.  Hence no closed walk of length ≥ 1 exists, so
+||| matStar a i i = sr.one (the identity, contributed by the zero-power term),
+||| and sr.add sr.one sr.one = sr.one follows from the semiring axioms.
+|||
+||| Status: POSTULATED — full Idris2 proof requires DAG walk induction and
+||| the matStar unrolling.  The mathematical argument is clear.
+||| Isabelle analogue: dag_no_pos_cycle (not yet in tropical-resource-typing).
+export postulate
+dagImpliesNoPosOycle :
+  (sr : ClosedSemiring a) ->
+  {n : Nat} ->
+  (m : Matrix n a) ->
+  IsDAGMatrix sr m ->
+  NoPosOycle sr m
 
 ||| Abstract star equation (postulated — see StarEquation above for concrete proof).
 export postulate
