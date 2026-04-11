@@ -7,7 +7,16 @@ TypeLL is open-ended — new levels are added when the type theory demands it.
 
 == Current Candidates
 
-_None yet.  First candidates to be added as research proceeds._
+[cols="1,2,1"]
+|===
+| Directory | Concept | Status
+
+| `L11-modal-box/`
+| Modal Box types — persistent, duplicable resource pools.
+  Adds `□` (box) modality above L10's QTT linear types.
+  Prerequisite: L10.
+| Sketch — 2 open believe_me proofs (comonad laws)
+|===
 
 == How to Propose a Level
 

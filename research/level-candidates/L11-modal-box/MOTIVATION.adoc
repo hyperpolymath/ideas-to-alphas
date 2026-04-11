@@ -1,0 +1,110 @@
+// SPDX-License-Identifier: PMPL-1.0-or-later
+= L11: Modal Box Types (Persistent Resource Pools)
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+
+== Status
+
+[cols="1,1"]
+|===
+| Field | Value
+
+| Level number | L11 (candidate; open — subject to change)
+| Prerequisite | L10 (QTT linear types, exactly-once usage)
+| Formalization | Idris2 sketch (`Modal.idr`) — proof sketch, not complete
+| Graduation target | `typell/src/abi/TypedWasm/ABI/` (level extension)
+| Open items | See <<open-items>>
+|===
+
+== The problem L10 cannot solve
+
+TypeLL L10 gives us linear types: every resource is used *exactly once*.
+This is correct and necessary for ephemeral capabilities — file handles,
+network connections, effect handlers.
+
+But some resources are *persistent pools*: a database connection pool, a
+thread executor, a read-only configuration store.  These are resources too
+— they must be managed, not leaked — but they can be *accessed* many times
+without being consumed.
+
+L10 with naive linearity handles this by passing the pool resource through
+each function that uses it:
+
+[source]
+----
+f : Pool -> A -> (Pool, B)   -- tedious: thread Pool everywhere
+g : Pool -> B -> (Pool, C)
+----
+
+This is correct but noisy.  It also collapses the distinction between:
+
+* *Persistent access* (read-only, duplicable): can be used freely
+* *Exclusive mutation* (write, consume): still linear
+
+The `□` (box) modality — from S4 modal type theory — solves this by adding
+a type constructor that promotes a resource to a *persistent, duplicable*
+form.  Inside a box, the resource is still managed (it must eventually be
+released), but it can be *extracted* arbitrarily many times.
+
+== What L11 adds
+
+* A type constructor `Box : Type -> Type`
+* Introduction rule: `box : a -> Box a` (put a resource into persistent form)
+* Elimination rule: `unbox : Box a -> a` (extract a fresh copy)
+* Duplication: `dup : Box a -> (Box a, Box a)` (the only place where copying is legal)
+* Release: `release : Box a -> ()` (consume the box itself linearly, once)
+
+The key invariant:
+
+> `Box a` is linear (used exactly once per *box*), but `unbox` may be called
+> any number of times — each call gives a *logically fresh copy* within the
+> box's scope.
+
+This is the S4 modal type theory rule `□A ⊢ □□A` (box is idempotent) plus
+the linear discipline that the *box itself* is consumed exactly once.
+
+== Why this sits above L10
+
+L10 tracks *usage* via QTT: each variable has a multiplicity annotation
+(0, 1, or ω).  Modal box types require a *structural rule* (weakening for
+`Box` types) that is absent at L10.
+
+Concretely: `dup` at L10 would require the resource to have multiplicity ω
+(unrestricted), losing the management discipline.  L11 adds a *restricted*
+ω-promotion that is:
+
+* Scoped (the box must still be released)
+* Transparent to the QTT grade (the grade of `unbox` uses the box's grade,
+  not multiplicity ω)
+* Compatible with the TypeLL grade lattice (grades compose under ⊗ as in L10)
+
+== Connection to TypeLL and WasmGC
+
+In WasmGC, persistent pools map to:
+
+* A struct reference held in a `funcref` table (survives function calls)
+* Accessed via `table.get` (read-only) or `table.set` (mutating — linear)
+
+L11 in `typell` would add:
+* A `BoxedRegion` type in the Idris2 ABI layer
+* A compile-time proof that a region is accessed under `□` discipline
+* `typed-wasm` uses this to verify that table reads from persistent pools
+  do not violate the single-writer invariant
+
+== Open items [[open-items]]
+
+. **Semantics**: Pin down whether box is *S4* (global necessity) or
+  *contextual/local* (necessity scoped to a bracket).  Contextual modal types
+  (Nanevski–Pfenning–Pientka) may fit better with the existing TypeLL levels.
+. **QTT integration**: Formally define how Box interacts with QTT multiplicities.
+  The grade of `unbox` should be ≤ the grade of the enclosing context.
+. **WasmGC mapping**: Specify the Idris2 ABI types for `BoxedRegion`.
+. **Proof**: The `Modal.idr` sketch currently uses `believe_me` for two of the
+  structural rules (see file).  These need real proofs before graduation.
+
+== Reference
+
+* Nanevski, Pfenning, Pientka — "Contextual Modal Type Theory" (2008)
+* Atkey — "Syntax and Semantics of Quantitative Type Theory" (2018)
+* Abel, Bernardy — "A unified view of modalities in type systems" (2020)
+* Existing: `typell/src/abi/TypedWasm/ABI/Levels.idr` (L10 QTT implementation)

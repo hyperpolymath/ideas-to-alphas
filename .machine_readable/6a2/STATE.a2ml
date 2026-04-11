@@ -17,7 +17,7 @@ Type theory ideas are explored here before promotion to production repos.
 Contains proofs-of-concept, reading notes, and prototype Idris2/Lean formalizations.
 Pipeline position: katagoria → typell → typed-wasm → PanLL.
 """
-completion-percentage = 5
+completion-percentage = 25
 
 [position]
 phase = "design"
@@ -26,18 +26,23 @@ maturity = "experimental"
 [route-to-mvp]
 milestones = [
   { name = "Repo created and pushed to GitHub", completion = 100 },
-  { name = "First research artefact (type theory prototype)", completion = 0 },
-  { name = "First L11 candidate formalized in Idris2", completion = 0 },
+  { name = "research/ directory structure created", completion = 100 },
+  { name = "First L11 candidate formalized in Idris2 (L11-modal-box)", completion = 60 },
+  { name = "L11-modal-box comonad laws proved (remove believe_me)", completion = 0 },
   { name = "First graduated artefact promoted to typell", completion = 0 },
 ]
 
 [blockers-and-issues]
-issues = []
+issues = [
+  "L11-modal-box/Modal.idr: comonadLaw1 and comonadLaw2 use believe_me — proofs pending.",
+  "L11-modal-box: semantics choice open (S4 global vs. contextual modal types).",
+]
 
 [critical-next-actions]
 actions = [
-  "Create first research artefact directory (e.g. research/level-candidates/)",
-  "Add first type theory reading note or prototype",
+  "Prove comonadLaw1/comonadLaw2 in Modal.idr without believe_me.",
+  "Decide S4 vs. contextual modal type theory (read Nanevski–Pfenning–Pientka 2008).",
+  "Add a reading-notes artefact for the modal types literature.",
 ]
 
 [maintenance-status]
