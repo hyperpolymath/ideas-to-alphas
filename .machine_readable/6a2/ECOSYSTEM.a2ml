@@ -18,6 +18,7 @@ tier = "infrastructure"  # 1 | 2 | infrastructure
 
 [related-projects]
 # relationship types: sibling-standard, dependency, dependent, inspiration, potential-consumer
+- { name = "nextgen-typing", relationship = "coordination-parent", notes = "Coordination monorepo for the full type theory pipeline. Canonical architecture doc lives there." }
 # - { name = "language-bridges", relationship = "sibling-standard" }
 # - { name = "hypatia", relationship = "potential-consumer" }
 
