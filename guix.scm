@@ -1,4 +1,4 @@
-;; SPDX-License-Identifier: PMPL-1.0-or-later
+;; SPDX-License-Identifier: MPL-2.0
 ;; Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <6759885+hyperpolymath@users.noreply.github.com>
 ;;
 ;; Guix package definition for katagoria
@@ -67,5 +67,5 @@
   (synopsis "Research origination space for the hyperpolymath type theory pipeline — type theory prototypes, Idris2/Lean proofs-of-concept, and reading notes before promotion to production repos")
   (description "RSR-compliant project. See README.adoc for details.")
   (license (list
-            ;; PMPL-1.0-or-later extends MPL-2.0
+            ;; MPL-2.0 extends MPL-2.0
             mpl2.0)))
