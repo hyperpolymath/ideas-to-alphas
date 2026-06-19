@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: MPL-2.0
+= Design: the civic automaton
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+How the simulation actually works. The model lives in `../src`; this document is
+the specification it implements.
+
+== Substrate
+
+A grid of *regions* (default 16×16). Each region carries a vector of civic state
+variables, all in `[0, 1]`:
+
+[cols="1,3"]
+|===
+| Variable | Meaning
+
+| `personhood`        | integrity of personhood (`1 − dominated`; derived)
+| `liberty`           | effective freedom of action
+| `virtue`            | civic virtue / voluntary cooperation
+| `fear`              | ambient threat perception
+| `coercion`          | applied state force
+| `trust`             | public trust
+| `legitimacy`        | institutional legitimacy
+| `equality`          | equal protection in practice
+| `safety`            | order / absence of disorder
+| `rightsEnforcement` | strength of courts, oversight, review
+| `economicPressure`  | exogenous economic strain (shock-driven)
+| `dominated`         | fraction of persons reclassified below full standing
+|===
+
+== Gliders (mobile doctrines)
+
+The contagion vector. A glider is a small doctrine-pattern that travels between
+regions, affecting the cell it occupies at full strength and its 8 neighbours at
+half strength. Each glider has:
+
+* `consent` — non-coercive deltas, always legal (persuasion, association,
+  literacy, rhetoric);
+* `moves` — coercive transitions it *attempts*, each routed through the
+  constitution type checker;
+* `coerce` — the effect applied per coercive move the checker admits.
+
+See `GLIDERS.adoc` for the catalogue. The key point: a glider does different
+things under different constitutions, because different `moves` type-check.
+
+== The turn loop
+
+Each turn, in order (`Simulation.step` in `../src/engine.js`):
+
+. *Apply gliders.* Consent effects apply directly. Each coercive move is checked
+  with `checkTransition(mode, move, cell)`:
++
+[cols="1,3"]
+|===
+| Verdict | Engine action
+
+| `UNREPRESENTABLE` | drop the coercive effect; increment `blockedMoves` (sound only)
+| `REQUIRES_PROOF` (discharged) | apply at half strength; no debt (lawful, limited)
+| `REQUIRES_PROOF` (undischarged) | drop the effect
+| `PERMITTED` | apply in full; book `legitimacyDebt` into `hiddenDamage` (unsound)
+|===
+
+. *Local coupling.* Each cell relaxes toward targets derived from its neighbours
+  of variables (see below).
+. *Diffusion.* Socially-transmissible variables relax toward the neighbourhood
+  mean — norms, fear, trust, repression, caste, institutions, and order all
+  spread. (Economic pressure is exogenous; personhood is derived; neither
+  diffuses.)
+. *Shocks.* Scheduled exogenous economic/threat spikes hit the whole grid — the
+  resilience test.
+. *Glider movement.* Gliders advance, reflect off borders, age, and are culled.
+
+== Coupling dynamics (the heart)
+
+Two routes to order, which is the whole moral of the model:
+
+[source]
+----
+consentOrder = ½·trust + ½·virtue
+forceOrder   = coercion + ½·dominated        -- domination makes force "efficient"
+conflict     = fear·(1−forceOrder)·(1−consentOrder)·(1−0.7·dominated)
+safety*      = 0.72·forceOrder + 0.72·consentOrder − 0.5·conflict
+----
+
+So order can be bought two ways: by *cooperation* (trust + virtue) or by
+*domination* (coercion + a dominated, unresisting population). Both raise safety.
+Only one destroys the capacity to take a shock:
+
+[source]
+----
+coerceWithoutConsent = coercion·(1 − consentOrder)
+legitimacy* = 0.26 + 0.34·equality + 0.32·liberty + 0.30·rightsEnforcement
+              − 0.95·dominated − 0.60·coerceWithoutConsent
+trust*      = 0.18 + 0.65·legitimacy + 0.35·equality − 0.70·fear − 0.60·coerceWithoutConsent
+----
+
+Domination and unconsented coercion hollow out legitimacy and trust, which is
+where resilience comes from.
+
+=== Asymmetric homeostasis
+
+A small but important realism knob (`DECAY` in the engine):
+
+* *coercion* is high-maintenance — it bleeds away fast, so order-by-force must be
+  constantly re-applied;
+* *rights institutions* persist once built — they erode only slowly;
+* *economic pressure* subsides on its own after a shock.
+
+And the type-system asymmetry that drives everything: under a *sound*
+constitution domination has target `0` and rights enforcement actively reverses
+any reclassification (the rights patch); under an *unsound* one, domination is
+sticky.
+
+== Outcomes
+
+`classifyOutcome` maps aggregate state to one of the named civic regimes:
+
+[cols="1,2"]
+|===
+| Outcome | Rough signature
+
+| Caste stability         | `dominated ≥ 0.45` with order still holding
+| Collapse / civil conflict | `safety < 0.4` or `fear > 0.62` or `legitimacy < 0.1`
+| Authoritarian pacification | high coercion, crushed liberty, order held by force
+| Bureaucratic sclerosis  | heavy institutions, little liberty, sluggish order
+| Free order              | high safety + liberty + legitimacy, low domination
+| Rights-preserving resilience | free order *and* high resilience
+| Contested / transitional | none of the above yet
+|===
+
+== Determinism
+
+Everything is seeded (`../src/rng.js`, mulberry32). A scenario + mode + input
+sequence reproduces exactly — which is what makes the headless comparison and
+the test suite meaningful.
+
+== Modules
+
+[cols="1,3"]
+|===
+| File | Role
+
+| `src/constitution.js` | the type checker (legal transitions; sound vs. unsound)
+| `src/engine.js`       | the automaton (cells, gliders, turn loop, outcomes)
+| `src/scenarios.js`    | glider catalogue + named scenarios
+| `src/rng.js`          | seeded PRNG
+| `web/`                | the playable simulator (canvas UI)
+| `sim/compare.mjs`     | headless sound-vs-unsound demonstration
+| `tests/`              | unit + thesis-level tests (`node --test`)
+| `formal/Constitution.idr` | the static certificate of the central claim
+|===

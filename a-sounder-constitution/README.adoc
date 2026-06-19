@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= A Sounder Constitution — a civic contagion simulator
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+A Plague&nbsp;Inc.-style civic simulator where the "pathogen" is not a disease
+but a *constitutional doctrine, norm, fear, right, or type error*.
+
+[IMPORTANT]
+====
+The one idea: **rights are not resources; they are type constraints on legal
+state transitions.** An *unsound* constitution can produce fast, stable order by
+permitting domination. A *sound* constitution restricts coercive moves — it makes
+some of them literally unrepresentable — and so is slower, but far more resilient.
+====
+
+This is a research proof-of-concept in the `ideas-to-alphas` incubator: a typed
+cellular automaton that synthesises three existing-but-never-combined ideas — CA
+models of political order, Game-of-Life/Plague-Inc. diffusion, and constitutional
+type-safety. See `MOTIVATION.adoc` for the near-miss survey and novelty claim.
+
+== Try it in 60 seconds
+
+[source,sh]
+----
+cd a-sounder-constitution
+
+# 1. The headless proof of the thesis (no browser needed):
+npm run sim          # node sim/compare.mjs
+
+# 2. The test suite (unit + thesis-level):
+npm test             # node --test
+
+# 3. The playable simulator (ES modules need an HTTP server):
+npm run serve        # python3 -m http.server 8080
+#   then open http://localhost:8080/web/
+----
+
+In the playable version: pick a doctrine on the right, click the grid to release
+it, press *Play*. Then flip the constitution between *Sound* and *Unsound* and
+watch the *type-checker log*. Releasing a **Caste** or **Surveillance** doctrine
+under a sound constitution fills the log with `✗ type error: … unrepresentable`
+and domination stays at 0%; under an unsound one the same doctrine reads
+`✓ permitted … (domination)` and the polity slides toward caste.
+
+== What you should see
+
+Hold a strategy fixed and vary only the constitution (this is `npm run sim`):
+
+[cols="1,1,3"]
+|===
+| Strategy | Constitution | Outcome
+
+| reach for coercion | unsound | *fast* order — but caste stability: domination ~80–90%, legitimacy/trust → 0, enormous hidden debt
+| reach for coercion | sound   | the coercive moves are *unrepresentable* (tens of thousands blocked); domination never happens; the shortcut to order is simply gone
+| build legitimacy   | either  | durable *rights-preserving resilience* — except in Reconstruction-unsound, where a pre-existing caste cannot be undone and the polity stalls
+|===
+
+The lesson the model makes you feel: unsound order is fast and brittle because
+its stability *is* domination; sound order is slower because the type system
+refuses the cheap coercive moves — and that refusal is exactly what survives a
+shock.
+
+== Layout
+
+[cols="1,3"]
+|===
+| Path | What
+
+| `src/constitution.js` | the type checker — legal transitions, sound vs. unsound (the central mechanic)
+| `src/engine.js`       | the civic automaton — cells, gliders, turn loop, outcomes
+| `src/scenarios.js`    | the doctrine (glider) catalogue and named scenarios
+| `src/rng.js`          | seeded PRNG (determinism)
+| `web/`                | the playable canvas simulator (`index.html`, `ui.js`, `styles.css`)
+| `sim/compare.mjs`     | headless sound-vs-unsound demonstration
+| `tests/`              | `node --test` suite (mechanics + thesis-level assertions)
+| `formal/Constitution.idr` | Idris2 proof that `Person -> Property` is unrepresentable under a sound constitution
+| `docs/`               | `TYPE-THEORY.adoc`, `DESIGN.adoc`, `GLIDERS.adoc`
+|===
+
+== The two type signatures, side by side
+
+[source,haskell]
+----
+-- Unsound: personhood is a tag; anyone can be re-tagged.
+data Human = FullPerson | PartialPerson | PropertyPerson | NonCitizenPerson
+reclassify : Human -> Human          -- a total function; domination is free
+----
+
+[source,idris]
+----
+-- Sound: Property is unrepresentable; coercion needs a proof obligation.
+data Person = Full | Partial | NonCitizen            -- no Property constructor
+soundNeverProperty : (p : Person) -> Not (embed p = PropertyPerson)
+----
+
+`formal/Constitution.idr` proves the sound side; `src/constitution.js` is its
+executable mirror, exercised by `tests/`.
+
+== Status
+
+Pre-alpha research artefact (2026-06-19). The JavaScript engine, tests, headless
+comparison, and web UI run today (Node 22 / any modern browser, zero
+dependencies). The Idris2 module is written to compile clean but has *not* been
+run through `idris2` in this environment — see `formal/README.adoc` for the
+verification status and graduation criteria.
+
+== License
+
+MPL-2.0. Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath).

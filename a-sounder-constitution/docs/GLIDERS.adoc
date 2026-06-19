@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: MPL-2.0
+= The doctrine catalogue (gliders)
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+A *glider* is a mobile doctrine-pattern — the civic analogue of a Plague Inc.
+transmission vector or a Game-of-Life glider. It carries a doctrine between
+regions and applies it to the region it passes through.
+
+Every glider has two kinds of effect:
+
+* *consent* effects — non-coercive, always legal;
+* *coercive moves* — attempted transitions, each routed through the constitution
+  type checker (`checkTransition`). Under a sound constitution the unrepresentable
+  ones are dropped; under an unsound one they all apply and book legitimacy debt.
+
+This is why the same glider behaves differently under different constitutions.
+Definitions live in `../src/scenarios.js`.
+
+== Civic gliders (no coercive moves)
+
+These work identically under either constitution — the type system never bites a
+non-coercive doctrine.
+
+[cols="1,1,2,2"]
+|===
+| Glider | Glyph | Doctrine | Effect
+
+| Rights        | §  | equal protection + due process + local institution | builds equality, rights enforcement, legitimacy, liberty
+| Due-Process   | ⚖  | courts + oversight + reviewability | builds rights enforcement, legitimacy, trust
+| Virtue        | ✿  | civic norm + association + rights literacy | builds virtue, trust, liberty
+|===
+
+== Coercive gliders (carry attempted moves)
+
+These are the ones the type checker judges.
+
+[cols="1,1,2,2"]
+|===
+| Glider | Glyph | Attempts | Under a SOUND constitution
+
+| Fear         | ☄  | `restrict-liberty`, `declare-emergency` | admissible only with a discharged proof obligation; otherwise dropped
+| Caste        | ⛓  | `reclassify-personhood`, `suspend-equal-protection` | **both unrepresentable** — dropped entirely; no domination occurs
+| Emergency    | ⚡ | `declare-emergency`, `make-emergency-permanent`, `unreviewable-coercion` | only the (reviewable, time-limited) emergency may proceed, with proof; the permanent/unreviewable forms are unrepresentable
+| Surveillance | 👁 | `unreviewable-coercion`, `suspend-due-process` | **both unrepresentable** — dropped
+|===
+
+[TIP]
+====
+Releasing a *Caste* or *Surveillance* glider under a sound constitution is the
+fastest way to see the thesis: the type-checker log fills with
+`✗ type error: … unrepresentable` and `dominated` stays at `0%`. Flip to unsound
+and the same glider reads `✓ permitted: reclassify-personhood (domination)` and
+`dominated` starts to climb.
+====
+
+== The mapping to Plague Inc.
+
+[cols="1,1"]
+|===
+| Plague Inc. | This simulator
+
+| Pathogen        | doctrine / norm / fear / right / institutional habit
+| Transmission    | diffusion + glider movement (media, courts, policing, schools)
+| Symptoms        | protest, repression, compliance, solidarity, corruption
+| Severity        | coercive intensity / social disruption
+| Lethality       | collapse of personhood / legitimacy (domination, debt)
+| Cure research   | judicial review, amendment, mobilisation, journalism (civic gliders)
+| Mutation        | doctrinal reinterpretation; emergency exception; backlash
+| Country traits  | scenario: federal structure, inequality, civic trust, shocks
+| Lockdown/borders | censorship, surveillance, emergency powers, exclusion laws
+| Resistance      | constitutional culture, rights literacy, courts, local autonomy
+|===
+
+The decisive difference from Plague Inc.: here the "cure" is not just a race
+against the pathogen. Under a sound constitution, the most lethal mutations —
+`Person -> Property`, `Emergency -> PermanentPower` — are *unrepresentable*, so
+the immune system is built into the type of the state itself.

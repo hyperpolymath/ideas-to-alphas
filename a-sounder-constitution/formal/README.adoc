@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: MPL-2.0
+= Formal core — rights as type constraints, proved
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+`Constitution.idr` is the load-bearing claim of the whole project, stated where
+it cannot wriggle: at the type level.
+
+== The claim
+
+> Rights are not resources. They are *type constraints on legal state
+> transitions*. A sound constitution makes coercive downgrades of personhood
+> *unrepresentable* — not forbidden-at-runtime, but unwriteable.
+
+== What is proved
+
+[cols="1,3a"]
+|===
+| Result | Meaning
+
+| `soundNeverProperty`
+| For every sound standing `p`, `embed p` is provably not `PropertyPerson`.
+  The sound `Person` type has *no* `Property` constructor, so each case is
+  `impossible`. `Person -> Property` is not a forbidden move; it is a move that
+  cannot be named.
+
+| `soundMonotone`
+| Every legal personhood transition under a sound constitution is
+  rank-monotone (`LTE (rank a) (rank b)`): standing may be kept, recognised, or
+  naturalised — never stripped. This is exactly the shape of a Reconstruction
+  rights patch: only ever upward.
+
+| `SoundRestrict` / `lawfulRestriction`
+| A liberty restriction is admissible only with evidence that it is *reviewable*
+  and *narrowly tailored*. The constructor demands both proofs as arguments, so
+  an unjustified restriction does not type-check.
+
+| `unsoundReclassify` / `unsoundReachesProperty`
+| The contrast. In the unsound world `Property` is an ordinary constructor and
+  reclassification is a total function any human can be fed to.
+|===
+
+== Relationship to the simulator
+
+`../src/constitution.js` is the executable mirror of this module. Where Idris
+makes `Person -> Property` a refuted proposition, the JS engine makes the same
+move return `Verdict.UNREPRESENTABLE` and drops it. The long-run outcomes the
+simulator measures — caste stability vs. rights-preserving resilience — are
+downstream of exactly this one distinction. The JS side is exercised by
+`../tests/`; this side is the static certificate.
+
+== Verification status
+
+[WARNING]
+====
+This module is written to compile under Idris2 with `%default total` and zero
+`believe_me` / `assert_total`, but it has *not yet been run through Idris2 in
+this environment* (no `idris2` on `PATH`). Per this repo's convention, treat the
+"proved" claims as pending CI until the check below passes.
+====
+
+To check it locally:
+
+[source,sh]
+----
+idris2 --check formal/Constitution.idr
+----
+
+Expected: type-checks with no holes, no errors, no `believe_me`.
+
+== Graduation criteria (per `research/README.adoc`)
+
+. `idris2 --check` passes with zero `believe_me`/`assert_total`.
+. The `Person`/`Human` split is reconciled with the TypeLL personhood lattice
+  (is "standing" a QTT grade?).
+. At least one property is connected to a runtime check in `../src` via a
+  shared specification (the JS `checkTransition` should be the extracted
+  decision procedure for `SoundStep` + `SoundRestrict`).
+. Review by at least one other contributor.
