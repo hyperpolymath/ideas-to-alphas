@@ -2,7 +2,7 @@
 ;; Ecosystem position and relationships
 (ecosystem
   (version "1.0.0")
-  (name "katagoria")
+  (name "ideas-to-alphas")
   (type "library")
-  (purpose "{{REPO_DESCRIPTION}}")
+  (purpose "Incubator for the hyperpolymath type theory pipeline: matures findings from idea to alpha before promotion to typell.")
   (related-projects))
