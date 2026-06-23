@@ -1,0 +1,14 @@
+{
+  "name": "a-sounder-constitution",
+  "version": "0.1.0",
+  "description": "A Plague Inc.-like civic simulator where the pathogen is a constitutional doctrine and rights are type constraints on legal state transitions.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "sim": "node sim/compare.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "author": "Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"
+}

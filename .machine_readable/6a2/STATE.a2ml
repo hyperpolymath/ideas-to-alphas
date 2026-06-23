@@ -1,21 +1,21 @@
 # SPDX-License-Identifier: MPL-2.0
 # Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <6759885+hyperpolymath@users.noreply.github.com>
 #
-# STATE.a2ml — katagoria project state
+# STATE.a2ml — ideas-to-alphas project state
 
 [metadata]
-project = "katagoria"
+project = "ideas-to-alphas"
 version = "0.1.0"
 last-updated = "2026-04-11"
 status = "active"
 
 [project-context]
-name = "katagoria"
+name = "ideas-to-alphas"
 purpose = """
-Research origination space for the hyperpolymath type theory pipeline.
+Research incubation space for the hyperpolymath type theory pipeline.
 Type theory ideas are explored here before promotion to production repos.
 Contains proofs-of-concept, reading notes, and prototype Idris2/Lean formalizations.
-Pipeline position: katagoria → typell → typed-wasm → PanLL.
+Pipeline position: ideas-to-alphas → typell → typed-wasm → PanLL.
 """
 completion-percentage = 25
 

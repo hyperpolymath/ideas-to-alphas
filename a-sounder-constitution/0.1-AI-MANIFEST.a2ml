@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MPL-2.0
+---
+### [META]
+id: "a-sounder-constitution"
+level: 1
+parent: "../0-AI-MANIFEST.a2ml"
+
+---
+### [AI_MANIFEST]
+description: |
+  Research proof-of-concept: a Plague Inc.-style civic simulator (a typed
+  cellular automaton) whose central claim is that RIGHTS ARE TYPE CONSTRAINTS
+  ON LEGAL STATE TRANSITIONS, not resources. A sound constitution makes
+  coercive downgrades of personhood (e.g. Person -> Property) unrepresentable;
+  an unsound one permits them and buys fast order by domination at the cost of
+  legitimacy and resilience.
+
+  Read README.adoc first, then docs/TYPE-THEORY.adoc, then formal/Constitution.idr.
+
+canonical_locations:
+  type_checker: "src/constitution.js"   # the central mechanic (sound vs unsound)
+  engine: "src/engine.js"               # cellular automaton + gliders + turn loop
+  catalogue: "src/scenarios.js"         # doctrine (glider) catalogue + scenarios
+  playable_ui: "web/"                   # canvas simulator (serve over HTTP)
+  headless_demo: "sim/compare.mjs"      # quantitative sound-vs-unsound proof
+  tests: "tests/"                       # node --test (mechanics + thesis-level)
+  formal_proof: "formal/Constitution.idr"
+  docs: "docs/"
+
+invariants:
+  - "The central thesis MUST stay enforced in BOTH layers: formal/Constitution.idr
+     (statically: Property has no inhabitant in the sound Person type) and
+     src/constitution.js (dynamically: checkTransition returns UNREPRESENTABLE)."
+  - "src/ is pure model logic with NO DOM dependency, so it runs identically in
+     the browser and in Node (tests + headless comparison)."
+  - "The simulation MUST stay deterministic given a seed (src/rng.js); the test
+     suite and sim/compare.mjs depend on it."
+  - "Coercive doctrine effects MUST be routed through checkTransition — never
+     applied directly — or the constitution stops meaning anything."
+  - "Zero runtime dependencies: Node 22 + a static file server + a browser."
+
+run:
+  headless: "node sim/compare.mjs   (or: npm run sim)"
+  tests: "node --test               (or: npm test)"
+  serve: "python3 -m http.server 8080  (or: npm run serve); open /web/"
+
+status: "pre-alpha research artefact; JS+tests+UI run today; Idris2 not yet CI-checked here"
+
+graduation_target: "typell (typed personhood-lattice core) once the JS/Idris bridge and TypeLL/QTT mapping land"
