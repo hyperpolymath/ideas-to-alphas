@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
-// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
-= katagoria — Type Theory Research Origination
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= ideas-to-alphas — The Incubator (theory → practice; idea → alpha)
+image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=openssourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/kategoria-pipeline"]
+
 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 :toc:
 :icons: font
@@ -12,9 +14,17 @@ Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 == What This Is
 
-`katagoria` is the research origination space for the hyperpolymath type theory
-pipeline.  It is where type theory ideas are explored *before* being promoted
-to a production repo.
+`ideas-to-alphas` is the **incubator** of the hyperpolymath type theory pipeline:
+the theory→practice stage where a finding from the **lab** (`kategoria`) is matured
+from *idea to alpha* before it earns its own production (typed) repo.
+
+NOTE: This repo is mid-rename. The GitHub repo and local directory are still named
+`kategoria-pipeline` until the owner runs `gh repo rename ideas-to-alphas` (+ local
+`mv`). The role split — *lab* = `kategoria` (research/discovery), *incubator* = this
+repo (idea→alpha), *portal* = `nextgen-typing` (front-page on-ramp for people) — is
+captured in `dev-notes/2026-06-16-typing-sub-estate-roles-and-lifecycle.adoc`. Also
+update `project = "katagoria"` → `"ideas-to-alphas"` in `.machine_readable/6a2/STATE.a2ml`
+at rename time.
 
 == Pipeline Position
 
