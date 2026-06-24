@@ -1,0 +1,126 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Type theory: rights as transition constraints
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+== The one idea
+
+Most political simulations model rights as *scalars* — a freedom slider, a
+civil-liberties budget, points you spend down under pressure. That framing
+quietly concedes the authoritarian's premise: rights are a quantity, and in an
+emergency you can simply have less of them.
+
+This project models rights as something else entirely:
+
+[IMPORTANT]
+====
+**Rights are type constraints on legal state transitions.** A constitution is a
+transition relation. It does not *price* coercive moves; it decides which ones
+are *representable* at all.
+====
+
+A right is not "how much liberty is left". A right is a *rule about which
+successor states are well-typed*. Under a sound constitution, the transition
+`Person ↦ Property` is not expensive — it is a type error. You cannot pay for it,
+because there is nothing to buy: the target state does not exist in the grammar.
+
+== Sound vs. unsound, precisely
+
+Two human types, after the project's namesake distinction.
+
+.Unsound — personhood is a tag
+[source,haskell]
+----
+data Human
+  = FullPerson
+  | PartialPerson
+  | PropertyPerson      -- an ordinary inhabitant
+  | NonCitizenPerson
+----
+
+Anyone can be re-tagged. `reclassify : Human -> Human` is a total function. The
+type system offers no obstacle to domination. Order can be manufactured fast —
+by force and reclassification — and the system can even look stable. But the
+stability *is* domination, and the legitimacy that lets a polity absorb shocks
+is being spent without appearing on any ledger.
+
+.Sound — personhood is type-protected
+[source,idris]
+----
+record Human where
+  personhood      : Personhood
+  notProperty     : NotProperty      -- carried as evidence, not a flag
+  dueProcess      : DueProcess
+  equalProtection : EqualProtection
+----
+
+Here `Property` is *unrepresentable*: there is no constructor for it (see
+`formal/Constitution.idr`, where the sound `Person` type literally omits it, and
+`soundNeverProperty` proves the embedding never reaches it). Coercive moves that
+remain admissible — restricting liberty, declaring an emergency — are not free
+either: their *types demand proof obligations* (reviewable, narrowly tailored).
+An unjustified restriction does not type-check.
+
+== Why this is a better mechanic than a slider
+
+In a scalar model the only lever is magnitude: push freedom down, push security
+up. Every outcome is on one line between "free" and "safe", and the game is a
+tug-of-war.
+
+In the typed model the interesting moves are *illegal transitions*:
+
+[cols="1,1"]
+|===
+| Transition | Sound constitution
+
+| `Human -> Property`            | unrepresentable
+| `Person -> RightlessSubject`   | unrepresentable
+| `Citizen -> NonPerson`         | unrepresentable
+| `Emergency -> PermanentPower`  | unrepresentable
+| `Policing -> UnreviewableCoercion` | unrepresentable
+| `Liberty -> Restricted`        | admissible **only with discharged proof**
+|===
+
+Under the unsound constitution every one of those is a permitted total function.
+So the *same player strategy* produces different histories purely because of
+which moves type-check. That is the novelty: the constitution is not a parameter
+of the dynamics, it is the *type system the dynamics are written against*.
+
+== The algorithmic distinction it buys
+
+[cols="1,1,1"]
+|===
+| | Unsound | Sound
+
+| Speed to order | fast (coercion + domination) | slower (consent only)
+| Hidden damage | high (legitimacy debt) | none from lawful moves
+| Domination | reachable, sticky | unrepresentable (0)
+| Resilience (legitimacy·trust·personhood) | collapses to ~0 | preserved
+| Failure mode | caste / authoritarian / collapse | merely slow
+|===
+
+The simulator (`../sim/compare.mjs`) demonstrates this quantitatively: hold the
+strategy fixed, vary only the constitution, and watch the unsound run reach order
+by domination while the sound run refuses the coercive moves at the type level
+(tens of thousands of `blocked` transitions) and keeps its legitimacy.
+
+== Where this sits in the literature
+
+Adjacent work exists; this exact synthesis does not, as far as we found:
+
+* *Cellular automata for political order* — e.g. CA models of Hobbes' state of
+  nature (2024): bottom-up emergence of order under weak common power. We borrow
+  the CA substrate but add a *type system over transitions*.
+* *Game-of-Life / CA playgrounds* — the diffusion substrate, with no civic
+  semantics.
+* *Plague Inc.-style diffusion games* — patient zero, traits, spread, adaptive
+  response. We keep the shape but swap the pathogen for a *doctrine* and the
+  cure for *judicial review / amendment / mobilisation*.
+
+What appears to be new is the middle: **constitutional type-safety as the
+governing rule of a typed civic automaton** — sound vs. unsound personhood, with
+Reconstruction-style rights patches modelled as transitions that can only ever
+raise standing.
+
+See `MOTIVATION.adoc` for the longer near-miss survey and the graduation path.

@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk>
+= Motivation, novelty, and graduation path
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+
+== The sharp thesis
+
+> Build a Plague&nbsp;Inc.-like civic simulator where the "pathogen" is not a
+> disease but a constitutional doctrine, norm, fear, right, or type error. The
+> main innovation is that **rights are not resources; they are type constraints
+> on legal state transitions.** An unsound constitution can produce fast stable
+> order by permitting domination. A sound constitution restricts coercive moves
+> but produces deeper resilience.
+
+== Why it looks novel (near-miss survey)
+
+The ingredients all exist; the synthesis does not appear to.
+
+[cols="1,2"]
+|===
+| Nearby work | What it has / lacks
+
+| Conway's Game of Life and CA playgrounds
+| The diffusion substrate (live/dead cells, gliders, emergent structures) — but
+  no civic semantics.
+
+| CA for political theory — e.g. a 2024 paper modelling Hobbes' state of nature
+  with cellular automata
+| Bottom-up emergence of order under weak common power. Closest in spirit. But
+  scalar/agent dynamics, *no type system over transitions*.
+
+| CA in the social sciences / urban simulation
+| Local rules → global social patterns. General substrate, not constitutional.
+
+| Plague Inc. and its open-source reimplementations
+| Patient zero, evolving traits, global spread, adaptive defensive response — the
+  exact game shape we borrow. Pathogen is biological, not doctrinal.
+|===
+
+What was *not* found is the middle of the Venn diagram: a website/project that
+models *constitutional type-safety*, *sound vs. unsound human personhood*, and
+*Reconstruction-style rights patches* as a *typed cellular automaton*. That is
+the gap this artefact occupies. Novel as a synthesis, not in every component.
+
+== Why a typed model beats a scalar one
+
+A normal political sim trades scalars: `freedom + security − unrest + economy`.
+Every outcome lies on a line and the game is a tug-of-war.
+
+This model instead turns on *illegal transitions*:
+
+----
+Human     -> Property
+Person    -> NonPerson
+Citizen   -> RightlessSubject
+Emergency -> PermanentPower
+Policing  -> UnreviewableCoercion
+Fear      -> UnlimitedExecutiveAuthority
+----
+
+In the sound model several of these are *unrepresentable*; in the unsound model
+they are permitted and may even be locally advantageous. Rights stop being a
+slider and become a *type system*: they determine which moves are legal. (Full
+argument in `docs/TYPE-THEORY.adoc`; the proof in `formal/Constitution.idr`.)
+
+== The two playable modes
+
+. *Unsound polity.* The human type is broken (`PropertyPerson` is an ordinary
+  constructor). Coercion is efficient; institutions stabilise quickly; the deeper
+  legitimacy score decays and the system becomes brittle. The grim lesson:
+  unsound systems can be stable and even efficient, but their stability is
+  domination.
+. *Sound polity.* The human type is protected (`personhood`, `notProperty`,
+  `dueProcess`, `equalProtection`). Coercion is hard to use; rights constraints
+  slow the player down; trust, legitimacy, and long-run resilience improve. The
+  system absorbs shocks without converting people into expendable units.
+
+The headless comparison (`sim/compare.mjs`) shows the resulting algorithmic
+distinction directly: *unsound = faster control, higher hidden damage; sound =
+slower intervention, stronger long-term resilience.*
+
+== Why this belongs in `ideas-to-alphas`
+
+The incubator matures findings from idea to alpha before they earn a typed
+production repo. This artefact is squarely that: its load-bearing claim is a
+*type-theoretic* one (a sound constitution makes domination unrepresentable), it
+ships an Idris2 formalization alongside an executable model, and it has a clear
+graduation story.
+
+The reframing also rhymes with the wider pipeline: TypeLL treats safety as an
+*open-ended progression of type constraints*. "Personhood as a type-protected
+record whose coercive downgrades are unrepresentable" is the same move applied to
+civic state — and "standing may only ever be recognised/upgraded, never
+stripped" (`soundMonotone`) is a monotonicity discipline of exactly the kind the
+pipeline studies elsewhere.
+
+== Graduation path
+
+[cols="1,3"]
+|===
+| Step | Target
+
+| Research complete (this dir)
+| `idris2 --check formal/Constitution.idr` passes with zero `believe_me`; JS
+  engine + tests + comparison stable (✔ today).
+
+| Tighten the bridge
+| Make `src/constitution.js` the *extracted decision procedure* for `SoundStep`
+  + `SoundRestrict`, from a single shared spec, so the JS and Idris cannot drift.
+
+| Reconcile with TypeLL
+| Map "standing" onto the TypeLL personhood/QTT lattice; decide whether
+  `soundMonotone` is an instance of an existing grade-monotonicity result.
+
+| Promote
+| If the personhood-lattice connection lands, the typed core graduates toward
+  `typell`; the simulator remains here as the explanatory front-end.
+|===
+
+== Open questions
+
+. Is "standing" (`Full`/`Partial`/`NonCitizen`) a QTT grade, or a separate
+  lattice that the grade lattice acts on?
+. The proof-obligation pattern (`SoundRestrict`) is a refinement type in
+  disguise. Should admissible-but-constrained coercion be modelled with full
+  dependent refinement (`{r : Restriction | reviewable r ∧ narrow r}`)?
+. The simulator's `legitimacyDebt` is a scalar today. Is there a typed account of
+  *debt* — e.g. a linear resource that an unsound move *must* allocate and can
+  never free — that would make "hidden damage" itself unrepresentable-to-ignore?

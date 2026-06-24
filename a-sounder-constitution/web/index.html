@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+<!-- Copyright (c) 2026 Jonathan D.A. Jewell (hyperpolymath) <j.d.a.jewell@open.ac.uk> -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A Sounder Constitution — a civic contagion simulator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>A Sounder Constitution</h1>
+      <p class="tag">
+        A Plague&nbsp;Inc.-style civic simulator where the pathogen is a constitutional doctrine — and
+        <strong>rights are type constraints on legal state transitions, not resources.</strong>
+      </p>
+    </header>
+
+    <main class="layout">
+      <!-- ── Left: the polity ───────────────────────────────────────────── -->
+      <section class="board">
+        <div class="board-controls">
+          <label
+            >Scenario
+            <select id="scenario"></select>
+          </label>
+          <label
+            >Layer
+            <select id="layer">
+              <option value="condition">Condition (composite)</option>
+              <option value="safety">Safety</option>
+              <option value="legitimacy">Legitimacy</option>
+              <option value="liberty">Liberty</option>
+              <option value="trust">Trust</option>
+              <option value="fear">Fear</option>
+              <option value="coercion">Coercion</option>
+              <option value="dominated">Domination</option>
+              <option value="rightsEnforcement">Rights enforcement</option>
+            </select>
+          </label>
+        </div>
+
+        <canvas id="grid" width="480" height="480" aria-label="civic grid"></canvas>
+
+        <div class="transport">
+          <button id="play" class="primary">▶ Play</button>
+          <button id="step">Step</button>
+          <button id="reset">Reset</button>
+          <label class="speed"
+            >Speed
+            <input id="speed" type="range" min="1" max="30" value="8" />
+          </label>
+        </div>
+
+        <p class="hint" id="hint">
+          Pick a doctrine on the right, then click the grid to release it. Doctrines spread on their own. Flip the
+          constitution between <em>sound</em> and <em>unsound</em> and watch what the type checker permits.
+        </p>
+      </section>
+
+      <!-- ── Right: instruments ─────────────────────────────────────────── -->
+      <aside class="panel">
+        <!-- Constitution toggle -->
+        <div class="card constitution">
+          <h2>Constitution</h2>
+          <div class="toggle" role="radiogroup" aria-label="constitution mode">
+            <button id="mode-sound" class="mode active" role="radio" aria-checked="true">
+              <span class="mode-title">Sound</span>
+              <span class="mode-sub">Property is unrepresentable; coercion needs proof</span>
+            </button>
+            <button id="mode-unsound" class="mode" role="radio" aria-checked="false">
+              <span class="mode-title">Unsound</span>
+              <span class="mode-sub">Every coercive move type-checks; domination is cheap</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Outcome + metrics -->
+        <div class="card">
+          <h2>Polity</h2>
+          <div class="outcome" id="outcome">Contested / transitional</div>
+          <div class="turnline">
+            turn <span id="turn">0</span> · blocked by type checker:
+            <span id="blocked">0</span> · hidden debt: <span id="debt">0.0</span>
+          </div>
+          <div id="meters" class="meters"></div>
+        </div>
+
+        <!-- Doctrine palette -->
+        <div class="card">
+          <h2>Doctrines <span class="muted">(click one, then click the grid)</span></h2>
+          <div id="palette" class="palette"></div>
+        </div>
+
+        <!-- Type checker log -->
+        <div class="card grow">
+          <h2>Type checker <span class="muted">live transition log</span></h2>
+          <ul id="log" class="log"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <noscript>This simulator needs JavaScript and must be served over HTTP (ES modules). Run <code>npm run serve</code>.</noscript>
+    <script type="module" src="ui.js"></script>
+  </body>
+</html>
