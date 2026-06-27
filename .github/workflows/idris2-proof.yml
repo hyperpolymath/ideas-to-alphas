@@ -58,8 +58,13 @@ jobs:
           echo "${HOME}/.idris2/bin" >> "$GITHUB_PATH"
 
       - name: Type-check the constitutional proof
+        # Run from the module's own directory: Idris2 derives the expected module
+        # name from the path it is given, so `module Constitution` must be checked
+        # as `Constitution.idr` (not `a-sounder-constitution/formal/Constitution.idr`,
+        # which it would expect to declare an — impossible, hyphenated — module name).
+        working-directory: a-sounder-constitution/formal
         run: |
           set -euo pipefail
           idris2 --version
-          idris2 --check a-sounder-constitution/formal/Constitution.idr
-          echo "formal/Constitution.idr type-checks (exit 0)"
+          idris2 --check Constitution.idr
+          echo "Constitution.idr type-checks (exit 0)"
