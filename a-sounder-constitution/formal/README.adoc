@@ -52,22 +52,20 @@ downstream of exactly this one distinction. The JS side is exercised by
 
 == Verification status
 
-[WARNING]
+[NOTE]
 ====
-This module is written to compile under Idris2 with `%default total` and zero
-`believe_me` / `assert_total`, but it has *not yet been run through Idris2 in
-this environment* (no `idris2` on `PATH`). Per this repo's convention, treat the
-"proved" claims as pending CI until the check below passes.
+*Machine-checked.* This module type-checks cleanly under *Idris2 0.7.0* with
+`%default total` and zero `believe_me` / `assert_total` / `postulate` (verified
+2026-06-27). The `Reflexive`-interface dependency for `LTE` is avoided by
+inlining a small `lteRefl` lemma, so the module needs only `import Data.Nat`.
 ====
 
-To check it locally:
+To reproduce:
 
 [source,sh]
 ----
-idris2 --check formal/Constitution.idr
+idris2 --check formal/Constitution.idr     # exit 0, no holes, no errors
 ----
-
-Expected: type-checks with no holes, no errors, no `believe_me`.
 
 == Graduation criteria (per `research/README.adoc`)
 

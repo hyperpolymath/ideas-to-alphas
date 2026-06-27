@@ -103,9 +103,9 @@ executable mirror, exercised by `tests/`.
 
 Pre-alpha research artefact (2026-06-19). The JavaScript engine, tests, headless
 comparison, and web UI run today (Node 22 / any modern browser, zero
-dependencies). The Idris2 module is written to compile clean but has *not* been
-run through `idris2` in this environment — see `formal/README.adoc` for the
-verification status and graduation criteria.
+dependencies). The Idris2 module type-checks cleanly under Idris2 0.7.0
+(`idris2 --check formal/Constitution.idr`, exit 0) — see `formal/README.adoc`
+for the verification details and graduation criteria.
 
 == License
 
