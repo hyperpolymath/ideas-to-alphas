@@ -54,10 +54,15 @@ downstream of exactly this one distinction. The JS side is exercised by
 
 [NOTE]
 ====
-*Machine-checked.* This module type-checks cleanly under *Idris2 0.7.0* with
-`%default total` and zero `believe_me` / `assert_total` / `postulate` (verified
-2026-06-27). The `Reflexive`-interface dependency for `LTE` is avoided by
-inlining a small `lteRefl` lemma, so the module needs only `import Data.Nat`.
+*Machine-checked, and enforced in CI.* This module type-checks cleanly under
+*Idris2 0.7.0* with `%default total` and zero `believe_me` / `assert_total` /
+`postulate` (verified 2026-06-27). The `Reflexive`-interface dependency for
+`LTE` is avoided by inlining a small `lteRefl` lemma, so the module needs only
+`import Data.Nat`.
+
+CI runs `idris2 --check` on every change under `formal/` via
+`.github/workflows/idris2-proof.yml`, so the proof can no longer drift out of
+sync with its claims without going red.
 ====
 
 To reproduce:
