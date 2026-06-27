@@ -30,11 +30,10 @@
 -- Contrast: in the unsound world `Property` is an ordinary constructor and
 -- reclassification is a total function any human can be fed to.
 --
--- VERIFICATION STATUS: written to compile under Idris2 with `%default total`
--- and zero `believe_me` / `assert_total`. It has NOT yet been run through
--- Idris2 in this environment (no idris2 on PATH); treat the "proved" claims as
--- pending CI, in line with this repo's blocker-tracking convention. The JS
--- mirror in ../src/constitution.js IS exercised by the test suite.
+-- VERIFICATION STATUS: type-checks cleanly under Idris2 0.7.0 with
+-- `%default total` and zero `believe_me` / `assert_total` / `postulate`
+-- (verified 2026-06-27 via `idris2 --check Constitution.idr`, exit 0). The JS
+-- mirror in ../src/constitution.js is exercised by the test suite.
 
 module Constitution
 
@@ -132,11 +131,21 @@ data SoundStep : Person -> Person -> Type where
 ||| Theorem: every sound step is rank-monotone. Standing is never reduced.
 ||| (The Reconstruction-style rights patch — only ever upward — is exactly the
 ||| set of moves this type admits.)
+|||
+||| `lteRefl` is reflexivity of `LTE`, inlined by induction on the index so the
+||| module needs only `import Data.Nat`. (Idris2 0.7.0's base supplies the same
+||| proof through the `Reflexive` interface as `reflexive`.)
+lteRefl : {n : Nat} -> LTE n n
+lteRefl {n = Z}   = LTEZero
+lteRefl {n = S k} = LTESucc lteRefl
+
+||| `a` is bound explicitly (hence relevant, not erased) so that `rank a` is
+||| available to `lteRefl` in the `Keep` case.
 public export
-soundMonotone : SoundStep a b -> LTE (rank a) (rank b)
-soundMonotone Keep       = lteRefl          -- rank p <= rank p
-soundMonotone Recognise  = LTESucc LTEZero  -- 1 <= 2
-soundMonotone Naturalise = LTEZero          -- 0 <= 2
+soundMonotone : {a : Person} -> SoundStep a b -> LTE (rank a) (rank b)
+soundMonotone {a} Keep   = lteRefl {n = rank a}  -- rank p <= rank p
+soundMonotone Recognise  = LTESucc LTEZero       -- 1 <= 2
+soundMonotone Naturalise = LTEZero               -- 0 <= 2
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- (3) PROOF OBLIGATION — coercion that is admissible-but-constrained.
