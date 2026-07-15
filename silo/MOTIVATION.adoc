@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Silo: motivation
+:toc: macro
+:icons: font
+
+toc::[]
+
+== The user we are designing for
+
+Not the diligent operator. The *non-expert, low-effort* user — the one who will
+paste a live API key into a shell, a config, a chat window, or a public repo, and
+who will *not* rotate it, *not* read the warning, and *not* perform any reversal
+step we offer. This user is where the real losses happen, so this user is the
+design centre. (Not "zero-knowledge" — that term is reserved for ZK proofs; here
+we mean low expertise and low diligence, nothing cryptographic.)
+
+The governing principle is *ALARP* (As Low As Reasonably Practicable), not
+"solved". We are not promising a secret cannot be compromised. We are reducing the
+_consequence_ of the compromises this user will inevitably cause, to as low as is
+practicable *given that they will do nothing*. A control that requires user effort
+has, for this user, an effectiveness of zero.
+
+== The problems, stated honestly
+
+. *Distinctive prefixes leak value.* `AKIA…`, `ghp_…`, `sk_live_…` tell a thief
+  which stolen blob is an AWS root key and which is a throwaway automation token.
+  The prefix that helps defenders (secret scanning) also helps the attacker
+  *triage*. (The AWS account id is even decodable from the access-key id alone.)
+
+. *Secrets in the clear survive everywhere.* Shell history, clipboard history
+  (`cbdhsvc` on Windows; pinned items persist to disk), `/proc/<pid>/cmdline`,
+  logs, backups. None of these are reachable by a type system.
+
+. *"Secure deletion" is a lie on modern hardware.* The estate's own RMO
+  (`januskey`, `valence-shell`) uses a 3-pass overwrite; on an SSD the FTL remaps
+  writes and the original blocks survive. `valence-shell` documents this and has a
+  matching open Coq gap (`obliterate_overwrites_all_blocks`). The theorem does not
+  hold on the actual disk.
+
+. *The lazy user will not reverse.* Any scheme whose safety depends on the user
+  running an "undo" or "shred" step has already failed for this user.
+
+== The reframe: turn each problem into the basis of the design
+
+[cols="1,2",options="header"]
+|===
+| Problem | Turned into
+
+| Prefixes leak *value* | A *uniform envelope* — every secret looks the same (a
+  UUID-shaped handle). Denies the attacker triage.
+| A public transform is only obfuscation | The uniformity must be *keyed*
+  (Format-Preserving Encryption) — or, better, carry *no secret at all*.
+| FPE still holds the secret in the blob | *Tokenisation*: the handle is a
+  *reference*, not ciphertext. It contains zero secret material, so a leaked
+  handle is *inert*.
+| Uniformity blinds our own leak detection | Register the *envelope shape* as the
+  scanned pattern. We detect "a silo secret leaked" (actionable) without
+  disclosing "an AWS root key leaked" (value). Net gain, not a trade.
+| RMO overwrite is unsound on SSD | *Crypto-shred by handle*: destroy the one
+  32-byte vault key. Irrecoverability reduces to "the key is gone and AES holds" —
+  provable — instead of defeating an SSD controller.
+| The lazy user will not reverse | *Inert by default.* Nothing to reverse, because
+  a leaked handle grants nothing. Maximal ALARP for zero user effort.
+|===
+
+== The one-line thesis
+
+*Make every secret look the same, and make the sameness contain nothing.* A
+UUID-shaped handle that references a vault entry is simultaneously: the uniform
+disguise the user asked for, the runtime realisation of the secret type
+`S ℓ A` (you hold the handle, you cannot open it without the vault — the modality
+with no `reflect`), and a *sound* RMO (destroy the referenced key and every copy
+of the handle everywhere dies at once).
+
+== What this explicitly does NOT solve
+
+Stated up front so no reader over-claims:
+
+* It does *not* protect against code running *as the user* on the same machine at
+  the moment of use — that code can ask the vault and get the plaintext. No
+  user-space design closes this; it is the OS threat model.
+* It does *not* clean the clipboard or shell history. Those need the separate
+  mechanisms (clipboard opt-out formats, `HistorySaveStyle SaveNothing`, keyring).
+* It does *not* remove the need to *rotate* a secret already leaked in plaintext.
+  A handle protects secrets *minted through the silo*; it cannot retroactively
+  un-leak a raw key that was pasted before siloing.
+
+The design is a consequence-reducer for the careless-by-default case, not a
+confidentiality proof. That is precisely what ALARP asks for.
+
+== Position in the pipeline
+
+Incubator (`idea -> alpha`) entry. Theory upstream in
+`epistemic-types/docs/secret-types.adoc`; runtimes it composes with are
+`januskey` / `valence-shell` (RMR/RMO) and the platform key stores
+(`keyctl` on Linux, DPAPI/TPM on Windows). Graduates to its own typed repo when
+the handle/vault core and the HMAC envelope have a conformance suite.

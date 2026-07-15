@@ -1,0 +1,145 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Silo: design
+:toc: macro
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+:stem: latexmath
+
+[abstract]
+The mechanical design of the silo: the handle format, the vault, the HMAC
+envelope, the leak-detection rule, and crypto-shred RMO. Motivation and the ALARP
+framing are in `../MOTIVATION.adoc`; the type theory is in
+`epistemic-types/docs/secret-types.adoc`.
+
+toc::[]
+
+== Two constructions, ranked
+
+Both make secrets look uniform; they differ in what the envelope contains.
+
+=== A. Tokenisation (handle) — preferred
+
+The visible artefact is a *handle* that contains no secret material:
+
+----
+SILO-<uuid>-<hmac>
+----
+
+* `uuid` — a random 128-bit identifier. Carries no information about the secret,
+  its provider, or its value. This is the "all of them look the same" property:
+  an AWS root key and a throwaway token are indistinguishable handles.
+* `hmac` — a truncated HMAC over the uuid, keyed by a silo *instance* key. Not a
+  CRC: an HMAC also *authenticates that this silo minted the handle*, so a thief
+  cannot forge silo-shaped tokens and a finder cannot validate one offline.
+
+The real secret lives in the *vault*, indexed by `uuid`. The handle is what the
+lazy user pastes into env vars, configs, `.bashrc`, chat, git. *A leaked handle is
+inert* — it references a vault the leak-recipient cannot reach.
+
+This is the runtime realisation of `S ℓ A` (`epistemic-types/docs/secret-types.adoc`):
+you can pass the handle around freely (`map` under the modality) but cannot open it
+(`no reflect`). The clearance `ℓ` is stored beside the vault entry and checked at
+resolve time.
+
+=== B. Format-preserving envelope (FPE) — fallback, stateless
+
+When a vault lookup is impossible (fully offline, no daemon), fall back to
+*keyed* FPE (NIST FF1 / FF3-1): the secret is *encrypted* into a uniform shape.
+Weaker than A — the secret is still in the blob, so a leaked envelope plus a leaked
+key is a compromise — but stateless. Use only where tokenisation cannot run. The
+user correctly anticipated the cost: the envelope grows ("now the thing is longer"),
+because a 40-char AWS secret does not fit in 128 bits.
+
+[IMPORTANT]
+====
+A public transform is *not* construction B. Without a key, permute+checksum is
+obfuscation: the algorithm is in this repo, so anyone reverses it and reads the
+`AKIA` prefix. FPE's indistinguishability holds *only* because of the key. This is
+the single most important correctness point in the whole design.
+====
+
+== The vault
+
+[cols="1,3",options="header"]
+|===
+| Platform | Backing store
+
+| Linux   | kernel keyring (`keyctl padd` + `keyctl timeout`) for the live key —
+  non-swappable kernel memory, real TTL; `age`/`sops` for the at-rest entry.
+| Windows | DPAPI (CurrentUser + entropy) or, for hardware binding, a CNG/TPM
+  key-encryption-key wrapping the data key. `SecretManagement`/`SecretStore` as
+  the managed option, with `-PasswordTimeout` for auto-lock.
+| systemd unit consumers | `systemd-creds` (TPM2-bound, `host+tpm2`), delivered
+  as a `$CREDENTIALS_DIRECTORY` file, never in env or argv.
+|===
+
+Each vault entry is `{ uuid, ciphertext | keyring-id, clearance ℓ, provider-tag
+(sealed), created, ttl }`. The `provider-tag` (which real service this is) is
+stored *inside* the sealed entry, never in the handle — so the value-triage the
+prefix used to give the attacker is available only after a successful,
+clearance-checked resolve.
+
+== Leak detection without value disclosure
+
+Registering a single Gitleaks / secret-scanning rule for the envelope shape
+`SILO-[0-9a-f-]{36}-[0-9a-f]{16}` restores the safety net the uniformity would
+otherwise remove:
+
+* a leaked handle is *detected* — "a silo secret appeared in a commit / log";
+* its *value is not disclosed* — the finder cannot tell provider or clearance.
+
+This is strictly better than the prefix status quo: we keep leak alerting and
+remove the attacker's triage gift. The rule is ours to publish; it does not depend
+on a partner-pattern registration.
+
+== Crypto-shred RMO — making obliteration sound
+
+RMO on a handle does *not* overwrite disk blocks. It destroys the *key* the vault
+entry needs:
+
+. `keyctl revoke` / `keyctl unlink` the live DEK (or `keyctl timeout` for the
+  self-destruct TTL); on Windows, delete the DPAPI/TPM-wrapped DEK.
+. delete the vault row.
+. emit the `januskey`-style `ObliterationProof` (commitment `H(uuid ‖ nonce ‖ t)`),
+  which records *that* a specific handle was obliterated, without storing its value.
+
+Now irrecoverability reduces to *"the 32-byte key is gone and AES holds"* — a claim
+that is provable and hardware-independent — rather than the unprovable "we defeated
+the SSD FTL". This is the construction that closes `valence-shell`'s open
+`obliterate_overwrites_all_blocks` gap *by changing the mechanism*, not by trying
+to prove the overwrite. Every copy of the handle, everywhere it was pasted, dies
+the instant the key does — the self-destruct the low-effort user never has to trigger.
+
+== `Echo`-graded partial release (the open middle)
+
+Between RMR (`r=0`, reversible) and RMO (`r=∞`, obliterate) sits graded
+declassification: resolve a handle to a *lossy view* at grade `r` — e.g. "reveal
+that a card number ends `4242` but nothing more", a leak budget of a few bits. The
+grade composes by the proved tropical algebra; a resolve that would exceed the
+entry's declared floor is refused by the checker. This is where the silo does
+something no existing secret manager does, and it is the natural alpha-stage
+experiment.
+
+== Threat model (restated, sharp)
+
+[cols="1,2",options="header"]
+|===
+| Adversary | Outcome
+
+| Finds a handle in a public repo / log / chat | *Nothing.* Inert reference.
+| Runs secret scanning | Detects the leak; learns no value. (Our own rule.)
+| Steals the vault file, not the key | Ciphertext only; useless (A) / needs the FPE key (B).
+| Runs *as the user, on the box, at use time* | *Wins.* Can ask the vault. Out of scope — OS threat model.
+| Wants provable erasure (GDPR Art. 17) | Crypto-shred + proof. Sound on SSD.
+|===
+
+== Build order (idea → alpha)
+
+. Handle format + HMAC envelope + the Gitleaks rule (pure, testable, no vault).
+. `keyctl`-backed vault on Debian: mint → inert handle → resolve → crypto-shred,
+  demonstrated end to end.
+. DPAPI/TPM vault on Windows, same interface.
+. `Echo`-graded partial resolve, gated by the `tropecheck` verdict.
+. Conformance suite → graduate to a typed repo.
