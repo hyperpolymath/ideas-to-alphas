@@ -1,0 +1,209 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= L11 semantics decision: graded necessity
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:icons: font
+:stem: latexmath
+
+[abstract]
+Decision record closing `MOTIVATION.adoc` open item 1 ("pin down whether box is S4
+(global necessity) or contextual/local"). *Decision: neither.* L11 adopts *graded
+necessity* `□_r A` over L10's multiplicity semiring. Rules in
+`QTT-INTEGRATION.adoc`; the CMTT assessment in
+`reading-notes/contextual-modal-types.adoc`.
+
+toc::[]
+
+== Status
+
+[cols="1,2"]
+|===
+| Field | Value
+
+| Status | *Decided*
+| Date | 2026-07-16
+| Closes | `MOTIVATION.adoc` open items 1 (semantics) and 2 (QTT integration)
+| Opens | Modal.idr rewrite (see <<consequences>>)
+| Supersedes | The implicit ungraded S4 reading in `Modal.idr`
+|===
+
+== The question, as posed
+
+`MOTIVATION.adoc` framed it as a binary: *S4 global necessity* versus *contextual
+modal types* (Nanevski–Pfenning–Pientka). Both were assumed to be candidate
+readings of the same `Box`.
+
+== The question was malformed
+
+The two options are not rivals. They refine `□` along *different axes*:
+
+* *CMTT* refines *which variables* a box may depend on (`[Ψ]A` — context).
+* *Graded necessity* refines *how many times* its content may be used (`□_r A` — quantity).
+
+A system can have both (`[Ψ]_r A`). So "S4 or contextual?" has no answer as
+asked. The answerable question is: *which axis does L11 need?* L11 exists to
+discipline the *usage* of persistent resources. That is the quantity axis.
+
+== Decision
+
+*Adopt graded necessity `□_r A`*, `r` drawn from the L10 multiplicity semiring
+`{0, 1, ω}` (parameterised over any ordered semiring — see `QTT-INTEGRATION.adoc` §2).
+
+Rejected: strict S4; contextual modal types.
+
+== Rationale
+
+=== 1. Strict S4 is refuted by L11's own worked example
+
+S4 promotion requires a closed (or all-modal) context. `Modal.idr`'s motivating
+function captures an ordinary variable:
+
+[source,idris]
+----
+openPool : String -> Box Conn
+openPool uri = mkBox (MkConn uri)     -- `uri` is an ordinary hypothesis
+----
+
+Under an honest strict-S4 reading this is *ill-typed*. The sketch never noticed
+because `Box` was never given a promotion rule at all — `mkBox : a -> Box a` is
+unrestricted, which is not S4's `□` and not anything else with a modal metatheory.
+S4 was never actually on the table; it was a label on an unruled constructor.
+
+=== 2. CMTT fixes the capture problem along an axis L11 does not need
+
+CMTT *would* make `openPool` typecheck, as `[uri:String]Conn` — a *recipe* for a
+connection awaiting a URI. But `[Ψ]A` carries no multiplicity anywhere. It would
+buy well-typedness and contribute exactly nothing to the discipline L11 was created
+to enforce. CMTT describes *code*; L11 describes a *resource*.
+
+=== 3. Graded necessity fixes it on the right axis
+
+Promotion by context scaling — `Γ ⊢ a : A` gives `r · Γ ⊢ box_r a : □_r A` —
+permits capture and *charges* for it. `openPool` is well-typed at `r = ω` because
+`ω · (uri :^1 String) = uri :^ω String`, and `String` is duplicable. The rule that
+makes the example legal is the same rule that accounts for its cost. That is the
+property L11 wanted.
+
+=== 4. It composes with what `typell` already has
+
+L10 already implements the `{0,1,ω}` semiring. Graded necessity is defined *from*
+that semiring — `split` is `+`, `comult` is `·`, `drop` is `0`, `extract` is `1`.
+L11 therefore adds a modality over existing algebra rather than importing a second,
+unrelated metatheory. CMTT would import contexts-as-types, metavariables, and
+contextual substitution — a large new surface for no usage-discipline gain.
+
+=== 5. It is the estate's existing idiom
+
+`epistemic-types/docs/secret-types.adoc` already classifies `S ℓ A` as a "graded
+comonad / coeffect graded by clearance", and `EchoBridge.agda` grades `Echo r A`
+over a tropical semiring with the algebra proved in `trope-checker` (Lean 4).
+Grading modalities by a semiring is how this estate already reasons. `□_r` is the
+usage-axis member of a family that exists, not a new invention.
+
+=== 6. S4 is not lost
+
+`□_ω` recovers the S4/`!`-style unrestricted box (`ω + ω = ω`, `ω · ω = ω`). The
+decision *generalises* S4 rather than discarding it — everything the sketch can
+currently express remains expressible, as the `r = ω` instance.
+
+== Consequences [[consequences]]
+
+=== `Modal.idr` must be rewritten (new blocker)
+
+`QTT-INTEGRATION.adoc` §5 proves that the current
+
+[source,idris]
+----
+dup : Box a -> (Box a, Box a)
+----
+
+is admissible only when `r + r = r`, hence only at `r ∈ {0, ω}`; and `r = 0` is
+erased, so *every useful instance pins `r = ω`*. Consequences:
+
+* `Box a` as written is isomorphic to *an L10 value at multiplicity ω*. L11
+  currently adds **nothing** over L10.
+* The proved `comonadLaw1`/`comonadLaw2` are sound but are the *ω-instance* laws.
+  They are not evidence for the discipline at `r = 1`.
+* `dup` must be replaced by `split : Box (r + s) a -> (Box r a, Box s a)`.
+
+This is a *new* graduation blocker that did not exist before this decision — not
+because anything regressed, but because the defect was previously invisible. Better
+found here than in `typell`.
+
+=== Where this leaves graduation to `typell`
+
+The checklist in `Modal.idr`, re-scored:
+
+[cols="4,1,3",options="header"]
+|===
+| Item | State | Note
+
+| Prove `comonadLaw1`/`comonadLaw2` without `believe_me`
+| *done, qualified*
+| Sound, but only the `ω` instance. Must be re-derived at general `r`.
+
+| Decide S4 vs contextual
+| *done*
+| This record. Answer: neither — graded necessity.
+
+| Integrate `Box` with the QTT multiplicity semiring
+| *spec'd*
+| `QTT-INTEGRATION.adoc`. Not implemented; `Multiplicity` still has no `+`, no `·`, no laws.
+
+| Add a `BoxedRegion` type to `typed-wasm`'s `Layout.Types`
+| not started
+| Blocked on the rewrite.
+
+| Verify one real WasmGC use case
+| not started
+| Blocked on the rewrite.
+
+| Review from ≥1 other contributor
+| not started
+| —
+|===
+
+Honest summary: *2 of 6 done, 1 spec'd, 3 not started — and the spec added a
+seventh item (the rewrite).* Graduation is **not** close, and this decision moved
+it further away in calendar terms while moving it closer in truth. The
+`route-to-mvp` milestone "First graduated artefact promoted to typell" stays at 0%
+and should not move until `split` replaces `dup` and the laws are re-derived at
+general `r`.
+
+=== CMTT is shelved, not discarded
+
+Contextual modal types remain the right tool for a *future* level whose boxed
+object is genuinely open — staged compilation, a WasmGC code template with holes, a
+typed-metavariable/tactic layer. That is a plausible later candidate. It is not L11.
+
+== Alternatives considered
+
+[cols="1,3",options="header"]
+|===
+| Alternative | Why rejected
+
+| Strict S4 `□A`
+| Refuted by `openPool` (capture). Would force pools to be closed, defeating the purpose.
+
+| Contextual `[Ψ]A`
+| Right fix, wrong axis. No multiplicity content; large metatheory import for zero usage-discipline gain.
+
+| Bigraded `[Ψ]_r A`
+| Both axes at once. No demonstrated L11 need for the context axis; pay for it when a level needs open boxes.
+
+| Keep `Box` ungraded, document `r = ω`
+| Honest, but then L11 is not a level — it is L10 usage with a wrapper. Rejected as it forfeits the level's reason to exist.
+
+| Grade over the tropical semiring (reuse `EchoBridge`)
+| Category error. Tropical grades measure *recoverability*, not *usage*. See `QTT-INTEGRATION.adoc` §1.
+|===
+
+== References
+
+* `QTT-INTEGRATION.adoc` — the adopted rules.
+* `reading-notes/contextual-modal-types.adoc` — the CMTT assessment behind rejection.
+* Orchard, Liepelt, Eades III (2019). _Quantitative Program Reasoning with Graded
+  Modal Types_. ICFP '19.
+* Atkey (2018). _Syntax and Semantics of Quantitative Type Theory_. LICS '18.
+* Nanevski, Pfenning, Pientka (2008). _Contextual Modal Type Theory_. ACM TOCL 9(3).

@@ -6,7 +6,7 @@
 [metadata]
 project = "ideas-to-alphas"
 version = "0.1.0"
-last-updated = "2026-04-11"
+last-updated = "2026-07-16"
 status = "active"
 
 [project-context]
@@ -17,7 +17,7 @@ Type theory ideas are explored here before promotion to production repos.
 Contains proofs-of-concept, reading notes, and prototype Idris2/Lean formalizations.
 Pipeline position: ideas-to-alphas → typell → typed-wasm → PanLL.
 """
-completion-percentage = 25
+completion-percentage = 30
 
 [position]
 phase = "design"
@@ -29,20 +29,29 @@ milestones = [
   { name = "research/ directory structure created", completion = 100 },
   { name = "First L11 candidate formalized in Idris2 (L11-modal-box)", completion = 100 },
   { name = "L11-modal-box comonad laws proved (believe_me-free)", completion = 100 },
+  { name = "L11-modal-box semantics decided (graded necessity; not S4, not contextual)", completion = 100 },
+  { name = "L11-modal-box QTT grade propagation specified (QTT-INTEGRATION.adoc)", completion = 100 },
+  { name = "L11-modal-box reading notes: contextual modal types (NPP 2008)", completion = 100 },
+  { name = "L11-modal-box Modal.idr rewritten to graded Box (split replaces dup)", completion = 0 },
   { name = "First graduated artefact promoted to typell", completion = 0 },
 ]
 
 [blockers-and-issues]
 issues = [
-  "L11-modal-box: semantics choice open (S4 global vs. contextual modal types — Nanevski–Pfenning–Pientka 2008).",
-  "L11-modal-box: QTT integration not yet specified (how does Box interact with grade lattice?).",
+  "L11-modal-box: Modal.idr `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r, hence r in {0, omega}; since 0 is erased, every useful instance pins r = omega. As written, Box a is isomorphic to an L10 value at multiplicity omega and L11 adds NOTHING over L10. Rewrite to graded Box required. See research/level-candidates/L11-modal-box/QTT-INTEGRATION.adoc section 5.",
+  "L11-modal-box: `Multiplicity` is a bare data type with no algebraic content — no +, no ., no semiring laws are defined on it at all.",
+  "L11-modal-box: comonadLaw1/comonadLaw2 are sound but are the omega-instance laws only; not evidence for the discipline at r = 1.",
+  "L11-modal-box: MOTIVATION.adoc says 'TypeLL grade lattice', but {0,1,omega} with 0 and 1 incomparable has no meets and is an ordered semiring, not a lattice. Prose or algebra is wrong; pin against typell L10.",
+  "Repo-wide: PROOF-STATUS.md reports 0/7 proven — stale; predates the Idris2 proofs that have landed (a-sounder-constitution, L11-modal-box).",
 ]
 
 [critical-next-actions]
 actions = [
-  "Decide S4 vs. contextual modal type theory (read Nanevski–Pfenning–Pientka 2008).",
-  "Add a reading-notes artefact for contextual modal types.",
-  "Specify QTT integration: how Box propagates grades through dup/unbox.",
+  "Rewrite Modal.idr to graded Box: replace dup with split : Box (r+s) a -> (Box r a, Box s a); add comult : Box (r*s) a -> Box r (Box s a); gate unbox on 1 <= r.",
+  "Give Multiplicity its semiring operations and laws, then prove dupForcesOmega : (r : Multiplicity) -> r + r = r -> Either (r = Zero) (r = Many) — machine-checking QTT-INTEGRATION.adoc section 5.",
+  "Re-derive comonadLaw1/comonadLaw2 at general r rather than the implicit omega.",
+  "Pin the ordering convention (is 0 <= 1?) and the lattice-vs-semiring question against typell/src/abi/TypedWasm/ABI/Levels.idr before graduation.",
+  "Refresh PROOF-STATUS.md against the proofs that have actually landed.",
 ]
 
 [maintenance-status]

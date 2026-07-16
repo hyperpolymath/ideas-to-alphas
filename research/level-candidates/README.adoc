@@ -13,10 +13,20 @@ TypeLL is open-ended — new levels are added when the type theory demands it.
 
 | `L11-modal-box/`
 | Modal Box types — persistent, duplicable resource pools.
-  Adds `□` (box) modality above L10's QTT linear types.
+  Adds *graded necessity* `□_r` (decided 2026-07-16) above L10's QTT linear types.
   Prerequisite: L10.
-| Sketch — 2 open believe_me proofs (comonad laws)
+| Sketch — comonad laws proved (`believe_me`-free), *but only at `r = ω`*.
+  Semantics decided and QTT integration specified; `Modal.idr` rewrite
+  (`split` must replace `dup`) blocks graduation.
 |===
+
+[NOTE]
+====
+The "2 open `believe_me` proofs" status previously recorded here was stale — those
+laws are proved. The live blocker is different and larger: `QTT-INTEGRATION.adoc`
+§5 shows the sketch's `dup` pins the grade to `ω`, so L11 currently adds nothing
+over L10. See `L11-modal-box/SEMANTICS-DECISION.adoc`.
+====
 
 == How to Propose a Level
 
