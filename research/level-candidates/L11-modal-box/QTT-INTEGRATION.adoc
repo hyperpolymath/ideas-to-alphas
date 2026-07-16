@@ -222,6 +222,49 @@ is isomorphic to "an L10 value at multiplicity ω" and L11 earns its level numbe
 only once `split` replaces `dup`.
 ====
 
+=== Machine-checked
+
+`DupForcesOmega.idr` discharges the proposition under Idris2 0.7.0
+(`idris2 --check DupForcesOmega.idr`, exit 0):
+
+[source,idris]
+----
+dupForcesOmega : (r : Multiplicity) -> plus r r = r -> Either (r = Zero) (r = Many)
+dupForcesOmega Zero Refl = Left Refl
+dupForcesOmega One  Refl impossible
+dupForcesOmega Many Refl = Right Refl
+----
+
+The `One` case is *impossible*: `plus One One` reduces to `Many`, so the premise
+would require `Refl : Many = One`. That one unwritable clause is the entire defect.
+The file also supplies the `plus` / `mult` tables that `Modal.idr`'s `Multiplicity`
+never had (see §8, item 5).
+
+=== Coda: the compiler had been saying so all along
+
+Idris2 0.7.0's Prelude exports
+
+[source,idris]
+----
+Prelude.dup : a -> (a, a)   -- "Function that duplicates its input"
+----
+
+— i.e. *unrestricted duplication*. `Modal.idr`'s `dup` collides with it by name,
+and the collision is not a coincidence: at `r = ω` the box's `dup` **is**
+`Prelude.dup` up to the `MkBox` wrapper.
+
+Until 2026-07-16 that clash made `Modal.idr` fail to elaborate entirely
+(`Ambiguous elaboration: Modal.dup vs Prelude.dup`), so `comonadLaw1` and
+`comonadLaw2` had *never been checked by anything* — while the file header, this
+candidate's checklist, and `STATE.a2ml` all recorded them as proved at 100%.
+Fixed by `%hide Prelude.dup`; the module now checks clean.
+
+It went unnoticed because *Idris2 was never installed in this estate*:
+`IDRIS2_PREFIX` and `PACK_DIR` were exported and `pack/bin` was on `PATH`, but the
+pack tree itself did not exist — so `idris2 --check` had never once been runnable
+locally. CI gates only `a-sounder-constitution`, not `research/`. See §9, open
+question 5.
+
 == 6. The linear handle vs. the graded content
 
 `Modal.idr` conflates two obligations in one type:
@@ -278,6 +321,13 @@ discipline, and which the graded reading makes explicit instead of implicit.
 . *WasmGC.* Does `□_ω` map to `table.get` and the linear handle to table-slot ownership?
   Unspecified (open item 3 in `MOTIVATION.adoc`).
 . *Exact counts.* Does `ℕ ∪ {ω}` buy anything real for pools, or is `{0,1,ω}` enough?
+. *CI does not gate `research/`.* The `idris2 --check` workflow covers only
+  `a-sounder-constitution/`. A module under `research/` can be broken for months
+  and still be recorded as proved at 100% in `STATE.a2ml` — which is exactly what
+  happened to `Modal.idr`. Either extend the gate to `research/`, or stop recording
+  research proofs as milestones. The former is cheap: Idris2 0.7.0 now installs at
+  `$IDRIS2_PREFIX` (= `PACK_DIR` = `developer/tools/opt/pack`) and both modules
+  check in well under a second.
 
 == References
 
