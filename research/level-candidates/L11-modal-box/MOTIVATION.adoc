@@ -11,10 +11,20 @@ Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 | Level number | L11 (candidate; open — subject to change)
 | Prerequisite | L10 (QTT linear types, exactly-once usage)
-| Formalization | Idris2 sketch (`Modal.idr`) — proof sketch, not complete
+| Semantics | *Graded necessity* `□_r A` — decided 2026-07-16 (`SEMANTICS-DECISION.adoc`)
+| Formalization | Idris2 sketch (`Modal.idr`) — *superseded*; `dup` pins `r = ω`, rewrite required
 | Graduation target | `typell/src/abi/TypedWasm/ABI/` (level extension)
 | Open items | See <<open-items>>
 |===
+
+[WARNING]
+====
+`Modal.idr` is *not* a faithful sketch of the decided semantics. Read
+`SEMANTICS-DECISION.adoc` and `QTT-INTEGRATION.adoc` first: the sketch's `dup` is
+admissible only at grade `ω`, so *as written L11 adds nothing over L10*. The prose
+below is the original design rationale, retained for history. Where it conflicts
+with those two documents, they win.
+====
 
 == The problem L10 cannot solve
 
@@ -78,6 +88,20 @@ Concretely: `dup` at L10 would require the resource to have multiplicity ω
   not multiplicity ω)
 * Compatible with the TypeLL grade lattice (grades compose under ⊗ as in L10)
 
+[NOTE]
+.Confirmed — and the sketch did not escape it
+====
+The fear stated in the paragraph above was *correct*, and `QTT-INTEGRATION.adoc` §5
+turns it into a proof: `dup : Box a -> (Box a, Box a)` forces `r + r = r`, hence
+`r ∈ {0, ω}`, hence (since `0` is erased) every useful instance pins `r = ω`. The
+sketch does not implement the "restricted ω-promotion" promised here — it *is* the
+unrestricted case. The three bullets are re-stated precisely under the decided
+semantics as: (i) release is linearity of the *handle*, distinct from the content's
+grade (`QTT-INTEGRATION.adoc` §6); (ii) `unbox` extracts at grade `1`, admissible
+iff `1 ⊑ r` (§4); (iii) the L10 algebra is an *ordered semiring*, not a lattice —
+`split` is `+`, `comult` is `·`, `drop` is `0` (§2, and see open item 5).
+====
+
 == Connection to TypeLL and WasmGC
 
 In WasmGC, persistent pools map to:
@@ -93,18 +117,44 @@ L11 in `typell` would add:
 
 == Open items [[open-items]]
 
-. **Semantics**: Pin down whether box is *S4* (global necessity) or
-  *contextual/local* (necessity scoped to a bracket).  Contextual modal types
-  (Nanevski–Pfenning–Pientka) may fit better with the existing TypeLL levels.
-. **QTT integration**: Formally define how Box interacts with QTT multiplicities.
-  The grade of `unbox` should be ≤ the grade of the enclosing context.
-. **WasmGC mapping**: Specify the Idris2 ABI types for `BoxedRegion`.
-. **Proof**: The `Modal.idr` sketch is now fully `believe_me`-free.  All comonad
-  laws (`comonadLaw1`, `comonadLaw2`) are proved by a single pattern match (`Refl`).
+. *Semantics* — *CLOSED 2026-07-16.* Answer: *neither* S4 nor contextual. The
+  question was malformed — the two refine `□` along different axes (contextual =
+  *which* variables; graded = *how many times*), so they are orthogonal, not rival.
+  L11 adopts *graded necessity* `□_r A`. See `SEMANTICS-DECISION.adoc`; the CMTT
+  assessment is in `reading-notes/contextual-modal-types.adoc`.
+. *QTT integration* — *CLOSED 2026-07-16.* Specified in `QTT-INTEGRATION.adoc`:
+  promotion scales the context (`r · Γ`); `unbox` extracts at grade `1`, admissible
+  iff `1 ⊑ r`; `dup` becomes `split` over `+`; `comult` over `·`; `drop` at `0`.
+. *`Modal.idr` rewrite* — *NEW, blocking graduation.* `dup` forces `r = ω`
+  (`QTT-INTEGRATION.adoc` §5), so the sketch is L10-at-ω with a wrapper. Replace
+  `dup` with `split`, gate `unbox` on `1 ⊑ r`, give `Multiplicity` its semiring
+  operations and laws (it currently has *none* — no `+`, no `·`), and re-derive the
+  comonad laws at general `r`. Checklist in `QTT-INTEGRATION.adoc` §8.
+. *WasmGC mapping*: Specify the Idris2 ABI types for `BoxedRegion`. Blocked on the
+  rewrite.
+. *Lattice vs semiring* — this document says "TypeLL grade lattice", but `{0,1,ω}`
+  with `0` and `1` incomparable has no meets and is *not* a lattice. Either the
+  prose or the algebra is wrong; pin against `typell/src/abi/TypedWasm/ABI/Levels.idr`.
+. *Proof*: `Modal.idr` is `believe_me`-free and `comonadLaw1`/`comonadLaw2` are
+  proved by `Refl` after a case split — but they are the *ω-instance* laws only, and
+  are not evidence for the discipline at `r = 1`.
 
 == Reference
 
-* Nanevski, Pfenning, Pientka — "Contextual Modal Type Theory" (2008)
-* Atkey — "Syntax and Semantics of Quantitative Type Theory" (2018)
-* Abel, Bernardy — "A unified view of modalities in type systems" (2020)
-* Existing: `typell/src/abi/TypedWasm/ABI/Levels.idr` (L10 QTT implementation)
+=== Internal
+
+* `SEMANTICS-DECISION.adoc` — the decision record (graded necessity).
+* `QTT-INTEGRATION.adoc` — the adopted typing rules and the `dup` proof.
+* `reading-notes/contextual-modal-types.adoc` — why CMTT was rejected for L11.
+* `typell/src/abi/TypedWasm/ABI/Levels.idr` — L10 QTT implementation.
+* `epistemic-types/docs/secret-types.adoc`, `EchoBridge.agda` — the *disclosure*-graded
+  sibling (tropical semiring). Orthogonal to L11's *usage* grade; do not conflate.
+
+=== External
+
+* Nanevski, Pfenning, Pientka — "Contextual Modal Type Theory" (2008), ACM TOCL 9(3)
+* Atkey — "Syntax and Semantics of Quantitative Type Theory" (2018), LICS
+* Orchard, Liepelt, Eades III — "Quantitative Program Reasoning with Graded Modal
+  Types" (2019), ICFP — *the system L11 adopts*
+* Brunel, Gaboardi, Mazza, Zdancewic — "A Core Quantitative Coeffect Calculus" (2014), ESOP
+* Abel, Bernardy — "A unified view of modalities in type systems" (2020), ICFP

@@ -1,0 +1,226 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Reading notes: Contextual Modal Type Theory (Nanevski, Pfenning, Pientka 2008)
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:toclevels: 3
+:icons: font
+:stem: latexmath
+
+[abstract]
+Reading notes on Nanevski, Pfenning and Pientka, _Contextual Modal Type Theory_,
+ACM Transactions on Computational Logic 9(3), 2008. Written to settle L11 open
+item 1 — "pin down whether box is S4 (global necessity) or contextual/local".
+The verdict and its reasoning are in <<verdict>>; `../SEMANTICS-DECISION.adoc`
+records the decision itself.
+
+toc::[]
+
+== Why this paper was on the list
+
+`MOTIVATION.adoc` open item 1 says contextual modal types "may fit better with the
+existing TypeLL levels" than S4. These notes test that claim. The short answer is
+that it is *half right for the wrong reason*: CMTT does fix the defect in S4 that
+L11 trips over, but it fixes it along an axis L11 does not care about.
+
+== 1. The problem the paper solves
+
+Proof assistants and logical frameworks are full of *metavariables* — the holes in
+a partial proof, the unknowns in a unification problem, the `?goal` in a tactic
+script. Operationally everyone knows what they are. Type-theoretically they were
+second-class: a hole is not a term, because it has free variables that the
+surrounding term does not bind, and no ordinary type describes it.
+
+The paper's move: give holes first-class type-theoretic status by *internalising
+the context they depend on*.
+
+== 2. The judgmental starting point
+
+The base is the Pfenning–Davies judgmental reconstruction of modal logic, where
+`□A` is read not as a mysterious box but as the internalisation of a *second
+judgment*:
+
+* `A true` — ordinary truth, depends on hypotheses
+* `A valid` — truth *independent of any hypotheses*, i.e. closed
+
+`□A` internalises `A valid`. Hence S4's promotion rule demands the context be
+empty (or contain only modal assumptions): you may `box` a term only if it stands
+on its own.
+
+CMTT's observation: *"valid" is too coarse.* The interesting judgment is not "closed"
+but "closed **relative to Ψ**".
+
+== 3. The refinement: `[Ψ]A`
+
+The contextual modal type `[Ψ]A` internalises the judgment
+
+[quote]
+____
+"A is valid in context Ψ" — i.e. `Ψ ⊢ M : A` for some M with free variables drawn
+from Ψ.
+____
+
+A value of type `[Ψ]A` is an *open term together with the context it is open in*.
+S4's `□A` is recovered as `[·]A` — the empty-context instance. CMTT strictly
+generalises S4.
+
+=== Two zones
+
+Judgments carry two contexts:
+
+----
+Δ ; Γ ⊢ M : A
+----
+
+* `Γ` — ordinary variables `x : A`
+* `Δ` — *contextual* (meta)variables `u :: A[Ψ]`, read "u stands for a term of
+  type A with free variables in Ψ"
+
+=== Rules (shape)
+
+.Introduction
+[stem]
+++++
+\frac{\Delta ; \Psi \vdash M : A}{\Delta ; \Gamma \vdash \mathsf{box}(\Psi.M) : [\Psi]A}
+++++
+
+Note the premise typechecks `M` against `Ψ` — *not* against `Γ`. This is how the
+"closed relative to Ψ" reading is enforced.
+
+.Elimination
+[stem]
+++++
+\frac{\Delta ; \Gamma \vdash M : [\Psi]A \qquad \Delta, u :: A[\Psi] ; \Gamma \vdash N : C}{\Delta ; \Gamma \vdash \mathsf{letbox}\ u = M\ \mathsf{in}\ N : C}
+++++
+
+.Metavariable occurrence (the closure)
+A metavariable never appears bare. It appears *applied to a substitution* that
+supplies terms for its context:
+
+[stem]
+++++
+\frac{u :: A[\Psi] \in \Delta \qquad \Delta ; \Gamma \vdash \sigma : \Psi}{\Delta ; \Gamma \vdash u[\sigma] : A}
+++++
+
+This is the syntactic price of the idea, and it is the part that matters for
+implementation: `u[σ]` is a *closure*, and the theory must say what happens when
+`u` is later instantiated.
+
+== 4. The technical core: contextual substitution
+
+Ordinary substitution `[M/x]N` does not suffice. Instantiating `u` requires
+*contextual substitution*:
+
+----
+[[Ψ.M / u]] N
+----
+
+— replace `u` by `M`, where `M` lives in `Ψ`. The hard case is exactly the closure:
+when the substitution meets an occurrence `u[σ]`, it must *compose*: apply `σ` to
+`M`, i.e. produce `[σ]M`. Substitution therefore recurses through the delayed
+substitutions rather than merely walking the term.
+
+This is the paper's real contribution — not the type `[Ψ]A`, which is a natural
+enough idea, but the demonstration that contextual substitution is well-behaved:
+it satisfies the expected substitution lemmas, and the calculus enjoys the
+standard metatheory. The reason metavariables were second-class was that nobody
+had shown their substitution principle was sound; this shows it.
+
+== 5. Downstream
+
+* *Beluga* (Pientka et al.) is built directly on CMTT — contextual objects and
+  context variables are its core.
+* *LF / Twelf* metavariables and higher-order pattern unification (Miller's
+  pattern fragment: `u[σ]` where `σ` is a renaming) get a typed account.
+* *Staged computation / metaprogramming* — a code template with holes is exactly a
+  contextual object; the link to Davies–Pfenning's `○` (next) and the λ° line.
+
+== 6. Relevance to L11 [[verdict]]
+
+The question is what L11's `Box` should be. Three candidates, and the useful way to
+see them is that *all three fix the same defect in S4, along different axes*.
+
+=== The defect
+
+S4 promotion demands a closed (or all-modal) context. L11's own motivating example
+fails it immediately:
+
+[source,idris]
+----
+openPool : String -> Box Conn
+openPool uri = mkBox (MkConn uri)     -- captures the ordinary variable `uri`
+----
+
+Under *strict S4*, `openPool` is *ill-typed*: `uri` is an ordinary hypothesis, so
+`MkConn uri` is not valid, so it cannot be boxed. Any honest S4 reading of the
+current sketch is already broken by its own worked example.
+
+=== The three fixes
+
+[cols="1,2,2",options="header"]
+|===
+| Approach | How it handles capture | What it charges
+
+| *S4* (`□A`)
+| Forbids it. Context must be empty/all-modal.
+| Nothing — because nothing is allowed.
+
+| *CMTT* (`[Ψ]A`)
+| *Names* it. The captured variables become `Ψ`, and the box is an open term
+  awaiting instantiation.
+| Nothing quantitative. Tracks *which* variables, never *how many times*.
+
+| *Graded* (`□_r A`)
+| *Allows* it, scaling the context: `r · Γ`.
+| A quantity — the grade `r`.
+|===
+
+=== Why CMTT is the wrong axis for L11
+
+CMTT refines `□` along the *context-dependence* axis: which variables may the boxed
+thing mention? L11 exists to answer a *quantity* question: how many times may the
+pooled resource be used, and who must release it? `[Ψ]A` has no notion of
+multiplicity anywhere in it. Adopting CMTT would make `openPool` typecheck — and
+would say nothing whatever about the discipline L11 was created to enforce.
+
+Concretely: CMTT would type `openPool` as producing `[uri:String]Conn`, a *recipe*
+for a connection awaiting a URI. That is a genuinely different object from "a live
+pool you may read ω times and must close once". CMTT is describing *code*; L11 is
+describing a *resource*.
+
+Also decisive: the two are *orthogonal, not rival*. `[Ψ]A` and `□_r A` refine
+different parameters of the same modality, and a system could have `[Ψ]_r A`. So
+"S4 vs contextual" was a false dichotomy — the real question was "which axis does
+L11 need?", and the answer is quantity.
+
+=== Where CMTT *would* be right
+
+Keep it on the shelf for a future level whose boxed thing is genuinely *open*:
+
+* staged compilation / code generation — a WasmGC code template with holes;
+* an effect handler boxed around a *continuation hole* (though algebraic effects
+  are L8's job, so this likely belongs there, not at L11+);
+* any level that wants typed metavariables (a tactic/proof-term layer over `typell`).
+
+That is a real candidate for a later level. It is not L11.
+
+== 7. Caveats on these notes
+
+Written from the paper's structure and standard presentation, not from a
+line-by-line re-read; the rule shapes above are given schematically to support the
+L11 decision, not as a faithful transcription of the paper's exact formulation.
+Anyone graduating this material to `typell` should re-read §§1–4 of the original
+against the `[Ψ]A` shelf-case above. The reasoning in <<verdict>> does not depend
+on the fine detail: it turns only on CMTT tracking *which* variables rather than
+*how many times*, which is not in dispute.
+
+== References
+
+* Nanevski, A., Pfenning, F., Pientka, B. (2008). _Contextual Modal Type Theory_.
+  ACM Transactions on Computational Logic 9(3).
+* Pfenning, F., Davies, R. (2001). _A Judgmental Reconstruction of Modal Logic_.
+  MSCS 11(4). — the `A valid` judgment CMTT refines.
+* Davies, R., Pfenning, F. (2001). _A Modal Analysis of Staged Computation_. JACM 48(3).
+* Pientka, B. (2008). _A Type-Theoretic Foundation for Programming with
+  Higher-Order Abstract Syntax and First-Class Substitutions_. POPL '08. — Beluga.
+* See `../QTT-INTEGRATION.adoc` for the graded necessity this decision adopts instead.

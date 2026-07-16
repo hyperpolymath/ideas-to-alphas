@@ -1,0 +1,296 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= L11 QTT Integration: how Box propagates grades
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+:toc:
+:toclevels: 3
+:icons: font
+:stem: latexmath
+
+[abstract]
+Resolves the open item "QTT integration: formally define how Box interacts with
+QTT multiplicities" (`MOTIVATION.adoc`, open item 2). The answer is *graded
+necessity*: replace the ungraded `Box` of `Modal.idr` with `□_r A` indexed by a
+grade drawn from L10's multiplicity semiring, and derive `dup` / `unbox` /
+`release` from the semiring operations rather than postulating them.
+
+toc::[]
+
+== Scope
+
+This document is *normative for the L11 candidate only*. It does not change L10,
+and it does not graduate anything to `typell`. It fixes the typing rules that a
+graded `Box` must satisfy, and records one consequence that invalidates the
+current `Modal.idr` sketch (<<dup-theorem>>).
+
+== 1. Two grades, not one
+
+The single most important thing to get right before any rule is written: there are
+*two distinct graded structures* in this estate, over *different semirings*, and
+they must not be conflated.
+
+[cols="1,1,1",options="header"]
+|===
+| | *Usage grade* (this document) | *Disclosure grade* (`Echo`)
+
+| Question answered
+| How many times may this resource be consumed?
+| How much of this secret may be recovered?
+
+| Semiring
+| Multiplicity `R = {0, 1, ω}` (L10; `Modal.idr`'s `Multiplicity`)
+| Tropical / min-plus `(ℕ ∪ {∞}, min, +)`
+
+| Zero / One
+| `0` = erased, `1` = linear
+| `∞` = nothing recoverable, `0` = fully recoverable
+
+| Carrier in the estate
+| `typell` L10; `Modal.idr`
+| `epistemic-types/src/EpistemicTypes/EchoBridge.agda` (`gradeMin`, `gradePlus`)
+
+| Proved where
+| Not yet (this is the gap)
+| `trope-checker/spec/calculus-v0.2-draft.adoc` (Lean 4)
+
+| Endpoints
+| `0` erased … `ω` unrestricted
+| `r=0` RMR (reversible) … `r=∞` RMO (obliterated)
+|===
+
+Both `□_r A` (usage) and `S ℓ A` / `Echo r A` (disclosure) are *graded comonads* —
+`epistemic-types/docs/secret-types.adoc` says so explicitly of `S ℓ A` ("graded
+comonad / coeffect graded by clearance"). That structural similarity is exactly
+what makes the conflation tempting and wrong: *same shape, different semiring,
+different theorem*. `ω + ω = ω` is idempotence of unrestricted use; `min(∞,∞) = ∞`
+is idempotence of total obliteration. They are not the same fact.
+
+[IMPORTANT]
+====
+L11 is graded by *usage* only. Disclosure grading is orthogonal and belongs to the
+silo / `epistemic-types` line. If both are ever needed on one type, the result is
+*bigraded* — `□_r (S ℓ A)` — not a single grade over a fused semiring. Fusing them
+would silently identify "used twice" with "leaked twice", which is false.
+====
+
+== 2. The usage semiring
+
+Let `R = (R, +, ·, 0, 1, ⊑)` be an ordered semiring. For L10, `R = {0, 1, ω}`:
+
+.Addition (how uses combine when a resource is *split*)
+[cols="1,1,1,1",options="header"]
+|===
+| `+` | `0` | `1` | `ω`
+| `0` | `0` | `1` | `ω`
+| `1` | `1` | `ω` | `ω`
+| `ω` | `ω` | `ω` | `ω`
+|===
+
+.Multiplication (how uses compose when a resource is *nested*)
+[cols="1,1,1,1",options="header"]
+|===
+| `·` | `0` | `1` | `ω`
+| `0` | `0` | `0` | `0`
+| `1` | `0` | `1` | `ω`
+| `ω` | `0` | `ω` | `ω`
+|===
+
+`⊑` is the subsumption preorder: `r ⊑ s` means a resource graded `s` may stand
+where grade `r` is required. `ω` is top (`0 ⊑ ω`, `1 ⊑ ω`); `0` and `1` are
+*incomparable* — an erased value cannot be used once, and a linear value cannot be
+silently discarded.
+
+[NOTE]
+====
+`R` is deliberately presented as a parameter, not hardcoded. The rules below hold
+for any ordered semiring, so L11 extends to `ℕ ∪ {ω}` (exact-count grades) without
+re-derivation. Pin the concrete choice against `typell/src/abi/TypedWasm/ABI/Levels.idr`
+before graduation — Idris 2's own `{0,1,ω}` ordering conventions differ from the
+presentation here and the mismatch must be checked, not assumed.
+====
+
+== 3. Graded contexts
+
+Contexts carry a grade per variable: `Γ = x₁ :^{r₁} A₁, …, xₙ :^{rₙ} Aₙ`.
+
+* *Scaling*: `s · Γ = x₁ :^{s·r₁} A₁, …, xₙ :^{s·rₙ} Aₙ`
+* *Addition*: `(Γ + Δ)(x) = Γ(x) + Δ(x)`, pointwise over a shared variable set
+* *Subsumption*: `Γ ⊑ Δ` pointwise
+
+== 4. The rules
+
+=== Promotion (introduction)
+
+[stem]
+++++
+\frac{\Gamma \vdash a : A}{r \cdot \Gamma \vdash \mathsf{box}_r\ a : \Box_r A}
+++++
+
+To build a box usable at grade `r`, *every free variable it captures is scaled by
+`r`*. This is the rule that does the real work, and it is why graded necessity does
+not need S4's "context must be empty/all-boxed" restriction: a box may capture
+locals provided the context can *afford* them `r` times.
+
+=== Extract (elimination at 1)
+
+[stem]
+++++
+\frac{\Gamma \vdash b : \Box_r A \qquad 1 \sqsubseteq r}{\Gamma \vdash \mathsf{unbox}\ b : A}
+++++
+
+This *resolves* `MOTIVATION.adoc`'s informal open item ("the grade of `unbox`
+should be ≤ the grade of the enclosing context"). Stated precisely: extraction
+happens at grade `1`, and is admissible exactly when `1 ⊑ r` — i.e. `r ∈ {1, ω}`.
+At `r = 0` the content is erased and `unbox` is *illegal*, not merely discouraged.
+
+=== Comultiplication (nesting — grade multiplies)
+
+[stem]
+++++
+\frac{\Gamma \vdash b : \Box_{r \cdot s} A}{\Gamma \vdash \delta\ b : \Box_r (\Box_s A)}
+++++
+
+`Modal.idr`'s `boxLift` / `boxFlatten` pair is the ungraded shadow of this rule.
+Note `□□A ≅ □A` (the S4 idempotence the sketch claims) is *only* an isomorphism
+when `r · s = r = s`, which in `R` means `r = s ∈ {0, ω}` — see below.
+
+=== Split (sharing — grade adds)
+
+[stem]
+++++
+\frac{\Gamma \vdash b : \Box_{r + s} A}{\Gamma \vdash \mathsf{split}\ b : \Box_r A \otimes \Box_s A}
+++++
+
+*This, not duplication, is the correct rule for `dup`.* Sharing a box divides its
+grade between the two halves; it does not replicate it.
+
+=== Discard (weakening at 0)
+
+[stem]
+++++
+\frac{\Gamma \vdash b : \Box_0 A}{\Gamma \vdash \mathsf{drop}\ b : I}
+++++
+
+Weakening is admissible only at grade `0`.
+
+== 5. Consequence: the current `dup` pins the box to ω [[dup-theorem]]
+
+`Modal.idr` declares:
+
+[source,idris]
+----
+dup : Box a -> (Box a, Box a)
+dup (MkBox x) = (MkBox x, MkBox x)
+----
+
+Read graded, this is `dup : □_r A ⊸ □_r A ⊗ □_r A` — input and both outputs at the
+*same* grade `r`.
+
+[NOTE]
+.Proposition
+====
+If `dup : □_r A ⊸ □_r A ⊗ □_r A` is admissible, then `r + r = r`.
+====
+
+*Proof.* The only rule producing `□_r A ⊗ □_s A` is `split`, whose premise is
+`□_{r+s} A`. Instantiating `s := r` gives premise `□_{r+r} A`; the declared input is
+`□_r A`; so `r + r = r`. ∎
+
+In `R = {0, 1, ω}`: `0 + 0 = 0` ✓, `1 + 1 = ω ≠ 1` ✗, `ω + ω = ω` ✓. Hence
+`r ∈ {0, ω}`. Grade `0` is erased (`unbox` illegal by <<_extract_elimination_at_1>>),
+so *any useful instance of the current `dup` forces `r = ω`*.
+
+This is precisely the failure `MOTIVATION.adoc` anticipated in prose —
+
+[quote]
+____
+"`dup` at L10 would require the resource to have multiplicity ω (unrestricted),
+losing the management discipline."
+____
+
+— and it is now a checkable statement rather than a worry. The sketch does not
+*avoid* that collapse; it *is* the `ω` instance of the graded system, with the
+grade left implicit. The comonad laws proved in `Modal.idr` (`comonadLaw1`,
+`comonadLaw2`) are sound but are the laws of the `ω`-instance only; they are not
+evidence that the discipline is preserved at `r = 1`.
+
+[WARNING]
+====
+This blocks graduation. `Modal.idr` must be rewritten so that `dup` splits the
+grade before L11 can claim to add anything over L10's `ω`. As it stands, `Box a`
+is isomorphic to "an L10 value at multiplicity ω" and L11 earns its level number
+only once `split` replaces `dup`.
+====
+
+== 6. The linear handle vs. the graded content
+
+`Modal.idr` conflates two obligations in one type:
+
+. the *modality* — how many times may the content be read (`unbox`)?
+. the *resource obligation* — the box itself must be `release`-d exactly once.
+
+Only (1) is the graded comonad. (2) is linearity of the *handle*, and it is why
+`release : Box a -> ()` is not the `drop` rule above: `drop` is weakening at grade
+`0`, whereas `release` is a mandatory linear *action*. Keep them separate:
+
+----
+Box_r A   ≜   a handle, itself at multiplicity 1 in the ambient context,
+              whose content is available at usage grade r
+----
+
+The pool example (`openPool` / `runQuery` / `closePool`) is then well-typed at
+`r = ω` for reads with a linear handle for lifecycle — which is the intended
+discipline, and which the graded reading makes explicit instead of implicit.
+
+== 7. Relation to the `epistemic-types` line
+
+* `S ℓ A` (`epistemic-types/docs/secret-types.adoc`) is a graded comonad over the
+  *clearance lattice*, and its defining property — `BeliefModality` omits `reflect`
+  — is the "you may carry it, you may `map` under it, you may not open it" rule.
+  `□_r` is the *usage* analogue: `unbox` is `reflect`, and unlike `S ℓ A` we *do*
+  admit it, gated on `1 ⊑ r`.
+* `Echo r A` (`EchoBridge.agda`) grades *disclosure* over the tropical semiring and
+  is the RMR/RMO axis. Orthogonal to `□_r`; compose as `□_r (S ℓ A)` if ever needed.
+* `EchoBridge.agda` is flagged as *scaffold* by `epistemic-types/AUDIT.adoc:289` and
+  `AFFIRMATION.adoc:207`. Treat it as a specification to agree with, *not* as a
+  dependency to import.
+
+== 8. What must change in `Modal.idr`
+
+. Index `Box` by a grade: `Box : R -> Type -> Type`.
+. Replace `dup` with `split : Box (r + s) a -> (Box r a, Box s a)`.
+. Gate `unbox` on `1 ⊑ r`.
+. Add `comult : Box (r * s) a -> Box r (Box s a)`; keep `boxFlatten` only as the
+  `r · s = r` corollary.
+. Prove the semiring laws for `Multiplicity` (currently a bare `data` with no
+  algebraic content — no `+`, no `·`, no laws are defined on it at all).
+. Prove `dupForcesOmega`: `(r : Multiplicity) -> r + r = r -> Either (r = Zero) (r = Many)`.
+. Re-derive the comonad laws *at general `r`*, not at the implicit `ω`.
+
+== 9. Open questions
+
+. *Ordering convention.* Is `0 ⊑ 1`? This document says no (incomparable). Idris 2's
+  own erasure semantics may effectively admit `0 ⊑ 1` at compile time. Must be pinned
+  against `typell` L10 before graduation.
+. *Is `R` a lattice or just an ordered semiring?* `MOTIVATION.adoc` says "TypeLL grade
+  lattice"; `{0,1,ω}` with `0`,`1` incomparable and no bottom is *not* a lattice. Either
+  the prose or the semiring is wrong.
+. *WasmGC.* Does `□_ω` map to `table.get` and the linear handle to table-slot ownership?
+  Unspecified (open item 3 in `MOTIVATION.adoc`).
+. *Exact counts.* Does `ℕ ∪ {ω}` buy anything real for pools, or is `{0,1,ω}` enough?
+
+== References
+
+* Atkey, R. (2018). _Syntax and Semantics of Quantitative Type Theory_. LICS '18.
+  — the QTT the `{0,1,ω}` semiring and context scaling come from.
+* Orchard, D., Liepelt, V.-B., Eades III, H. (2019). _Quantitative Program Reasoning
+  with Graded Modal Types_. ICFP '19 (Granule). — the graded necessity `□_r` adopted here.
+* Brunel, A., Gaboardi, M., Mazza, D., Zdancewic, S. (2014). _A Core Quantitative
+  Coeffect Calculus_. ESOP '14. — promotion-by-scaling.
+* Petricek, T., Orchard, D., Mycroft, A. (2014). _Coeffects: A Calculus of
+  Context-Dependent Computation_. ICFP '14.
+* Abel, A., Bernardy, J.-P. (2020). _A Unified View of Modalities in Type Systems_. ICFP '20.
+* Nanevski, A., Pfenning, F., Pientka, B. (2008). _Contextual Modal Type Theory_.
+  ACM TOCL 9(3). — see `reading-notes/contextual-modal-types.adoc`.
+* Internal: `epistemic-types/docs/secret-types.adoc`, `EchoBridge.agda`;
+  `trope-checker/spec/calculus-v0.2-draft.adoc`; `typell/src/abi/TypedWasm/ABI/Levels.idr`.

@@ -6,11 +6,30 @@
 -- L11 candidate: Modal Box types for persistent resource pools.
 --
 -- STATUS: research sketch — NOT ready for graduation to typell.
+--         SUPERSEDED by SEMANTICS-DECISION.adoc (2026-07-16).  Do not extend this
+--         file; it needs the graded rewrite described in the checklist below.
 --
 -- All proofs complete.  No believe_me, assert_total, or coercions remain.
 -- Comonad laws (comonadLaw1, comonadLaw2) proved by Refl after case split.
--- Remaining graduation blockers: integration test with TypeLL L10 context;
--- semantics review against QTT multiplicity rules.
+--
+-- BUT those are the omega-instance laws ONLY.  QTT-INTEGRATION.adoc section 5
+-- proves that `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r,
+-- hence r in {0, omega}; and r = 0 is erased, so every useful instance pins
+-- r = omega.  `Box a` as written is therefore isomorphic to an L10 value at
+-- multiplicity omega: L11 adds NOTHING over L10 until `dup` is replaced by
+-- `split : Box (r + s) a -> (Box r a, Box s a)`.
+--
+-- Semantics: DECIDED — graded necessity `Box r a`.  Not S4, not contextual modal
+-- types; the S4-vs-contextual question was malformed (they refine the box along
+-- different axes).  See SEMANTICS-DECISION.adoc; the CMTT assessment is in
+-- reading-notes/contextual-modal-types.adoc.
+--
+-- NB the `openPool` example below captures the ordinary variable `uri`, so it is
+-- ill-typed under any honest strict-S4 reading.  It is well-typed under graded
+-- promotion at r = omega, because omega * (uri :^1 String) = uri :^omega String.
+--
+-- Remaining graduation blockers: the graded rewrite (QTT-INTEGRATION.adoc s8);
+-- integration test with TypeLL L10 context.
 --
 -- See MOTIVATION.adoc for the design rationale and open items.
 
@@ -23,6 +42,14 @@ module Modal
 -- At L10, every variable has a multiplicity in {0, 1, ω}.
 -- L11 adds a fourth structural discipline for Box types.
 -- We model multiplicities as a simple data type here for clarity.
+--
+-- WARNING: this section is titled "semiring" but no semiring is defined here.
+-- `Multiplicity` is a bare enumeration: there is no (+), no (*), no 0/1 identity,
+-- and no laws.  Nothing below actually consults it — `Box` is not indexed by it.
+-- That absence is exactly why the `dup` defect went unnoticed: with no (+) to
+-- reason about, `r + r = r` was never a question anyone could ask.
+-- The graded rewrite must supply the operations and prove the semiring laws
+-- before `Box` can be indexed.  See QTT-INTEGRATION.adoc sections 2 and 8.
 
 data Multiplicity
   = Zero  -- erased: not used at runtime
@@ -186,14 +213,36 @@ closePool : Box Conn -> ()
 closePool pool = release pool
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Graduation checklist (see katagoria/research/README.adoc)
+-- Graduation checklist (see ../README.adoc)
 -- ─────────────────────────────────────────────────────────────────────────────
 --
 -- Before opening a PR on typell:
 --
 -- [x] Prove comonadLaw1 and comonadLaw2 without believe_me  (done: Refl after case split)
--- [ ] Decide between S4 (global box) and contextual modal types
--- [ ] Integrate Box with the QTT multiplicity semiring (grade propagation)
--- [ ] Add a BoxedRegion type to typed-wasm's Layout.Types
+--       QUALIFIED: the omega-instance laws only.  Must be re-derived at general r
+--       once Box is graded.  See QTT-INTEGRATION.adoc s5.
+-- [x] Decide between S4 (global box) and contextual modal types
+--       DECIDED 2026-07-16: NEITHER.  The question was malformed — contextual
+--       refines *which variables*, graded refines *how many times*; they are
+--       orthogonal, not rival.  L11 adopts graded necessity.
+--       See SEMANTICS-DECISION.adoc.
+-- [~] Integrate Box with the QTT multiplicity semiring (grade propagation)
+--       SPECIFIED in QTT-INTEGRATION.adoc.  NOT implemented.
+-- [ ] Rewrite Box to graded form  (NEW, blocking — QTT-INTEGRATION.adoc s8):
+--       - Box : Multiplicity -> Type -> Type
+--       - replace dup with  split  : Box (r + s) a -> (Box r a, Box s a)
+--       - add               comult : Box (r * s) a -> Box r (Box s a)
+--       - gate unbox on 1 <= r
+--       - give Multiplicity its semiring operations and laws (currently none)
+--       - prove dupForcesOmega : (r : Multiplicity) -> r + r = r
+--                             -> Either (r = Zero) (r = Many)
+--       - re-derive the comonad laws at general r
+-- [ ] Add a BoxedRegion type to typed-wasm's Layout.Types   (blocked on the rewrite)
 -- [ ] Verify at least one real WasmGC use case (connection pool or effect handler)
 -- [ ] Get review from at least one other contributor
+--
+-- Score: 2 of 6 done (one qualified), 1 specified, 3 not started — plus the
+-- rewrite this decision surfaced.  Graduation is NOT close.  The milestone
+-- "First graduated artefact promoted to typell" stays at 0% in
+-- .machine_readable/6a2/STATE.a2ml, and should not move until `split` replaces
+-- `dup` and the laws are re-derived at general r.
