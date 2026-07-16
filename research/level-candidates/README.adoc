@@ -15,17 +15,28 @@ TypeLL is open-ended — new levels are added when the type theory demands it.
 | Modal Box types — persistent, duplicable resource pools.
   Adds *graded necessity* `□_r` (decided 2026-07-16) above L10's QTT linear types.
   Prerequisite: L10.
-| Sketch — comonad laws proved (`believe_me`-free), *but only at `r = ω`*.
-  Semantics decided and QTT integration specified; `Modal.idr` rewrite
-  (`split` must replace `dup`) blocks graduation.
+| Sketch — compiles, and comonad laws proved (`believe_me`-free), *only since
+  2026-07-16* and *only at `r = ω`*. Semantics decided, QTT integration specified;
+  the `Modal.idr` rewrite (`split` must replace `dup`) blocks graduation.
 |===
 
-[NOTE]
+[WARNING]
+.Two corrections to the status this table used to carry
 ====
-The "2 open `believe_me` proofs" status previously recorded here was stale — those
-laws are proved. The live blocker is different and larger: `QTT-INTEGRATION.adoc`
-§5 shows the sketch's `dup` pins the grade to `ω`, so L11 currently adds nothing
-over L10. See `L11-modal-box/SEMANTICS-DECISION.adoc`.
+. The old entry — "Sketch — 2 open `believe_me` proofs (comonad laws)" — was stale
+  in a worse way than it looked. The `believe_me`s were indeed gone, but
+  `Modal.idr` *did not compile at all*: `dup` collided with Idris2 0.7.0's
+  `Prelude.dup`, so the comonad laws never elaborated and were checked by nothing.
+  It compiles now (`%hide Prelude.dup`).
+. The live blocker is larger than any proof: `QTT-INTEGRATION.adoc` §5 shows — and
+  `DupForcesOmega.idr` machine-checks — that the sketch's `dup` pins the grade to
+  `ω`. *L11 currently adds nothing over L10.*
+
+Root cause of (1): Idris2 was never installed in this estate (`IDRIS2_PREFIX` and
+`PACK_DIR` pointed at a `pack` tree that did not exist), and CI gates only
+`a-sounder-constitution/`, not `research/`. An unrunnable proof gate produces
+confident false records — *fix the gate before trusting any status in this table.*
+See `L11-modal-box/SEMANTICS-DECISION.adoc`.
 ====
 
 == How to Propose a Level
@@ -35,6 +46,15 @@ over L10. See `L11-modal-box/SEMANTICS-DECISION.adoc`.
    What type property does it enforce?  Where does it sit in the progression?
 3. Write an Idris2 or Lean 4 formalization sketch
 4. When the proof compiles with zero `believe_me`, open a PR on `typell`
+
+[IMPORTANT]
+====
+Step 4 means *actually run* `idris2 --check` and paste the exit code. Do not infer
+it. Every research proof in this directory was recorded as complete without ever
+being run, because Idris2 was not installed and CI did not gate `research/` — and
+one of them had never compiled. Idris2 0.7.0 is now installed at `$IDRIS2_PREFIX`
+(`developer/tools/opt/pack`), so there is no longer an excuse.
+====
 
 == Context
 

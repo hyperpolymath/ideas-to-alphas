@@ -135,9 +135,15 @@ L11 in `typell` would add:
 . *Lattice vs semiring* — this document says "TypeLL grade lattice", but `{0,1,ω}`
   with `0` and `1` incomparable has no meets and is *not* a lattice. Either the
   prose or the algebra is wrong; pin against `typell/src/abi/TypedWasm/ABI/Levels.idr`.
-. *Proof*: `Modal.idr` is `believe_me`-free and `comonadLaw1`/`comonadLaw2` are
-  proved by `Refl` after a case split — but they are the *ω-instance* laws only, and
-  are not evidence for the discipline at `r = 1`.
+. *Proof* — *corrected 2026-07-16.* `Modal.idr` **did not compile at all** from
+  creation until 2026-07-16: `dup` clashed with Idris2 0.7.0's `Prelude.dup`
+  (`Ambiguous elaboration`), so `comonadLaw1`/`comonadLaw2` never elaborated and
+  were checked by *nothing* — while this document and `STATE.a2ml` recorded them as
+  proved at 100%. Fixed with `%hide Prelude.dup`; the module now checks clean
+  (`idris2 --check Modal.idr`, exit 0), `believe_me`-free. The laws are nonetheless
+  the *ω-instance* laws only. `DupForcesOmega.idr` machine-checks the ω collapse.
+. *CI gap* — the `idris2 --check` gate covers only `a-sounder-constitution/`, not
+  `research/`. That is why the above survived three months. Extend it.
 
 == Reference
 

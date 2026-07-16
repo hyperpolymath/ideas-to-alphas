@@ -28,7 +28,9 @@ milestones = [
   { name = "Repo created and pushed to GitHub", completion = 100 },
   { name = "research/ directory structure created", completion = 100 },
   { name = "First L11 candidate formalized in Idris2 (L11-modal-box)", completion = 100 },
-  { name = "L11-modal-box comonad laws proved (believe_me-free)", completion = 100 },
+  { name = "L11-modal-box comonad laws proved (believe_me-free) — NB genuinely true only since 2026-07-16; Modal.idr did not compile before the `%hide Prelude.dup` fix, so this milestone was FALSE when first recorded at 100%", completion = 100 },
+  { name = "L11-modal-box Modal.idr actually compiles (idris2 0.7.0 --check, exit 0)", completion = 100 },
+  { name = "L11-modal-box dup-forces-omega machine-checked (DupForcesOmega.idr)", completion = 100 },
   { name = "L11-modal-box semantics decided (graded necessity; not S4, not contextual)", completion = 100 },
   { name = "L11-modal-box QTT grade propagation specified (QTT-INTEGRATION.adoc)", completion = 100 },
   { name = "L11-modal-box reading notes: contextual modal types (NPP 2008)", completion = 100 },
@@ -38,8 +40,12 @@ milestones = [
 
 [blockers-and-issues]
 issues = [
-  "L11-modal-box: Modal.idr `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r, hence r in {0, omega}; since 0 is erased, every useful instance pins r = omega. As written, Box a is isomorphic to an L10 value at multiplicity omega and L11 adds NOTHING over L10. Rewrite to graded Box required. See research/level-candidates/L11-modal-box/QTT-INTEGRATION.adoc section 5.",
-  "L11-modal-box: `Multiplicity` is a bare data type with no algebraic content — no +, no ., no semiring laws are defined on it at all.",
+  "PROCESS (root cause, fix first): idris2 was NEVER installed in this estate. IDRIS2_PREFIX and PACK_DIR were exported and pack/bin was on PATH, but the pack tree did not exist — so `idris2 --check` had never once been runnable locally. Consequence: research proofs were recorded as complete without anything ever checking them. Idris2 0.7.0 is now built and installed at that prefix (2026-07-16).",
+  "PROCESS: the Idris2 CI gate covers only a-sounder-constitution/, not research/. A research module can stay broken indefinitely while STATE.a2ml records it as proved at 100%. Extend the gate to research/ or stop recording research proofs as milestones.",
+  "L11-modal-box: Modal.idr did NOT COMPILE from creation until 2026-07-16 — `dup` collided with Idris2 0.7.0's `Prelude.dup : a -> (a, a)` (Ambiguous elaboration), so comonadLaw1/comonadLaw2 never elaborated and were verified by nothing, while the file header and this file both recorded them as proved. Fixed with `%hide Prelude.dup`; module now checks clean. The name clash was not a coincidence: Prelude.dup IS unrestricted duplication, which is what Box's dup collapses to at omega.",
+  "L11-modal-box: Modal.idr `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r, hence r in {0, omega}; since 0 is erased, every useful instance pins r = omega. As written, Box a is isomorphic to an L10 value at multiplicity omega and L11 adds NOTHING over L10. Rewrite to graded Box required. Machine-checked in DupForcesOmega.idr; see research/level-candidates/L11-modal-box/QTT-INTEGRATION.adoc section 5.",
+  "research/tropical/TropicalKleene.idr ALSO does not compile (idris2 0.7.0, exit 1): 'Expected a type declaration'. costMatAddZeroL is written `rewrite h` with no `in`, followed by `exact ...` — and `exact` is not Idris2 term syntax at all (an Idris1/tactic-style habit). The file uses syntax that has never existed in the language, so it cannot ever have been run. Same root cause as Modal.idr. NOT fixed here — needs its own PR; there may be further errors hidden behind the first parse failure. Suggested fix: `costMatAddZeroL m1 m2 i h = rewrite h in latAddZeroL (m2 i i)`.",
+  "L11-modal-box: `Multiplicity` is a bare data type with no algebraic content — no +, no ., no semiring laws are defined on it at all. (DupForcesOmega.idr now supplies plus/mult standalone, but Modal.idr's Box is still not indexed by them.)",
   "L11-modal-box: comonadLaw1/comonadLaw2 are sound but are the omega-instance laws only; not evidence for the discipline at r = 1.",
   "L11-modal-box: MOTIVATION.adoc says 'TypeLL grade lattice', but {0,1,omega} with 0 and 1 incomparable has no meets and is an ordered semiring, not a lattice. Prose or algebra is wrong; pin against typell L10.",
   "Repo-wide: PROOF-STATUS.md reports 0/7 proven — stale; predates the Idris2 proofs that have landed (a-sounder-constitution, L11-modal-box).",
@@ -47,18 +53,21 @@ issues = [
 
 [critical-next-actions]
 actions = [
+  "FIRST: extend the Idris2 CI gate to research/ — with idris2 0.7.0 now installed, Modal.idr and DupForcesOmega.idr each check in under a second. Until this exists, no research proof milestone in this file is trustworthy.",
+  "Audit every other repo in the estate that records an Idris2 proof milestone: the same unrunnable-gate failure mode applies wherever idris2 --check was assumed rather than executed.",
   "Rewrite Modal.idr to graded Box: replace dup with split : Box (r+s) a -> (Box r a, Box s a); add comult : Box (r*s) a -> Box r (Box s a); gate unbox on 1 <= r.",
-  "Give Multiplicity its semiring operations and laws, then prove dupForcesOmega : (r : Multiplicity) -> r + r = r -> Either (r = Zero) (r = Many) — machine-checking QTT-INTEGRATION.adoc section 5.",
+  "Fold DupForcesOmega.idr's plus/mult tables into Modal.idr and index Box by Multiplicity — dupForcesOmega itself is already machine-checked standalone; then prove the remaining semiring laws (associativity, distributivity, identities).",
+  "Fix research/tropical/TropicalKleene.idr in its own PR: costMatAddZeroL needs `rewrite h in latAddZeroL (m2 i i)` (currently `rewrite h` + `exact`, which is not Idris2 syntax); then re-check for errors hidden behind the first parse failure.",
   "Re-derive comonadLaw1/comonadLaw2 at general r rather than the implicit omega.",
   "Pin the ordering convention (is 0 <= 1?) and the lattice-vs-semiring question against typell/src/abi/TypedWasm/ABI/Levels.idr before graduation.",
   "Refresh PROOF-STATUS.md against the proofs that have actually landed.",
 ]
 
 [maintenance-status]
-last-run-utc = "2026-04-11T00:00:00Z"
-last-result = "unknown"
+last-run-utc = "2026-07-16T21:40:49Z"
+last-result = "partial — idris2 0.7.0 installed and run here for the first time. PASS: Modal.idr (after the %hide Prelude.dup fix), DupForcesOmega.idr, a-sounder-constitution/formal/Constitution.idr. FAIL: research/tropical/TropicalKleene.idr (pre-existing, uses non-Idris2 syntax; not fixed here). asciidoctor clean on all docs."
 open-warnings = 0
-open-failures = 0
+open-failures = 1
 
 [ecosystem]
 part-of = ["nextgen-typing pipeline"]
