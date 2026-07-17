@@ -32,10 +32,25 @@ TypeLL is open-ended — new levels are added when the type theory demands it.
   `DupForcesOmega.idr` machine-checks — that the sketch's `dup` pins the grade to
   `ω`. *L11 currently adds nothing over L10.*
 
-Root cause of (1): Idris2 was never installed in this estate (`IDRIS2_PREFIX` and
-`PACK_DIR` pointed at a `pack` tree that did not exist), and CI gates only
-`a-sounder-constitution/`, not `research/`. An unrunnable proof gate produces
-confident false records — *fix the gate before trusting any status in this table.*
+Root cause of (1) — *fixed 2026-07-17*, and worth stating precisely, because it was
+not carelessness in the proof. Nothing could check it, in three independent ways:
+
+* `just proof-check-idris2` did `exit 0` when Idris2 was absent ("SKIP: idris2 not
+  installed"). Idris2 *was* absent, so the recipe was green — it reported success
+  *because* nothing could check the proofs.
+* That recipe also handed `idris2 --check` a full path. Idris2 derives the expected
+  module name from the path, so every module failed on a name mismatch rather than
+  its real error — reporting the broken `ABI/Compliance.idr` as OK and the working
+  `ABI/Foreign.idr` as FAIL.
+* The CI gate installed Idris2 correctly but was path-filtered to
+  `a-sounder-constitution/formal/` alone — the directory where this same bug had
+  already happened once (#45). A gate scoped to where the bug last happened only
+  prevents the last bug.
+
+*An unrunnable gate that reports success is worse than no gate: it manufactures
+confidence.* All three are now fixed — `scripts/check-idris2-proofs.sh` checks every
+`.idr` in the repo, treats a missing toolchain as fatal, and *errors on any module
+not in its manifest*, so new proofs are gated by default rather than by memory.
 See `L11-modal-box/SEMANTICS-DECISION.adoc`.
 ====
 
@@ -49,11 +64,15 @@ See `L11-modal-box/SEMANTICS-DECISION.adoc`.
 
 [IMPORTANT]
 ====
-Step 4 means *actually run* `idris2 --check` and paste the exit code. Do not infer
-it. Every research proof in this directory was recorded as complete without ever
-being run, because Idris2 was not installed and CI did not gate `research/` — and
-one of them had never compiled. Idris2 0.7.0 is now installed at `$IDRIS2_PREFIX`
-(`developer/tools/opt/pack`), so there is no longer an excuse.
+Step 4 means *actually run* `./scripts/check-idris2-proofs.sh` — and add your module
+to its manifest, or the script will fail on it by design.
+
+Do not infer the result, and do not trust a bare exit code: `idris2 --check` *exits
+0 on a missing import* while printing `Error: Module X not found` (verified against
+0.7.0 — type errors, parse errors and name mismatches all exit 1; a missing import
+does not). The script requires both a zero exit and no `Error:` in the output. Every
+research proof in this directory was once recorded as complete without ever being
+run, and one of them had never compiled.
 ====
 
 == Context

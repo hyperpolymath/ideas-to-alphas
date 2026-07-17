@@ -1,20 +1,37 @@
 # SPDX-License-Identifier: MPL-2.0
-# Idris2 proof check — type-checks the a-sounder-constitution formal certificate
-# (formal/Constitution.idr) so the "rights are type constraints on legal state
-# transitions" claim cannot silently rot. The proof shipped once without being
-# machine-checked and did not actually compile (see #45); this gate prevents a
-# repeat. Path-filtered to the proof + this workflow to keep Actions burn low.
+# Idris2 proof check — type-checks EVERY Idris2 module in the repository via
+# scripts/check-idris2-proofs.sh (the same script `just proof-check-idris2`
+# runs, so local green and CI green mean the same thing).
+#
+# History, because the scope of this gate is the whole point:
+#
+#   v1 gated a-sounder-constitution/formal/ only. It was created after a proof
+#   shipped unchecked and did not compile (#45). It worked -- and the identical
+#   bug then walked into the two directories it did not cover. research/'s
+#   Modal.idr never compiled from creation until 2026-07-16 (`dup` collided with
+#   Prelude.dup), while every status file recorded its comonad laws as proved at
+#   100%. Five of the six modules under verification/proofs/idris2/ -- a
+#   directory named "proofs" -- still do not compile.
+#
+#   The lesson was not "gate that file". It was "gate the language". A gate
+#   scoped to where the bug last happened only ever prevents the last bug.
+#
+# Path filters are therefore deliberately broad: any .idr anywhere, the script,
+# and this workflow. The script itself fails on any .idr not in its manifest, so
+# new proofs cannot be added ungated.
 name: Idris2 Proof
 
 on:
   push:
     branches: [main, master]
     paths:
-      - 'a-sounder-constitution/formal/**'
+      - '**.idr'
+      - 'scripts/check-idris2-proofs.sh'
       - '.github/workflows/idris2-proof.yml'
   pull_request:
     paths:
-      - 'a-sounder-constitution/formal/**'
+      - '**.idr'
+      - 'scripts/check-idris2-proofs.sh'
       - '.github/workflows/idris2-proof.yml'
   workflow_dispatch:
 
@@ -57,14 +74,7 @@ jobs:
           make install SCHEME=chezscheme
           echo "${HOME}/.idris2/bin" >> "$GITHUB_PATH"
 
-      - name: Type-check the constitutional proof
-        # Run from the module's own directory: Idris2 derives the expected module
-        # name from the path it is given, so `module Constitution` must be checked
-        # as `Constitution.idr` (not `a-sounder-constitution/formal/Constitution.idr`,
-        # which it would expect to declare an — impossible, hyphenated — module name).
-        working-directory: a-sounder-constitution/formal
-        run: |
-          set -euo pipefail
-          idris2 --version
-          idris2 --check Constitution.idr
-          echo "Constitution.idr type-checks (exit 0)"
+      - name: Type-check every Idris2 module
+        # The script fails if idris2 is missing rather than skipping, so a broken
+        # install step can never render as a green proof run.
+        run: ./scripts/check-idris2-proofs.sh
