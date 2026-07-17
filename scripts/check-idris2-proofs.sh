@@ -68,10 +68,10 @@ MANIFEST=(
   "src/interface|Abi/Layout.idr|gated|ABI interface"
   "src/interface|Abi/Foreign.idr|gated|ABI interface"
   "verification/proofs/idris2|ABI/Foreign.idr|gated|the one verification/ module that compiles; real content, not a stub"
-  "verification/proofs/idris2|Types.idr|quarantine|LTE without 'import Data.Nat' -- Idris1-era template, never compiled"
-  "verification/proofs/idris2|ABI/Platform.idr|quarantine|LTE without 'import Data.Nat'"
-  "verification/proofs/idris2|ABI/Layout.idr|quarantine|NonZero/modNatNZ without 'import Data.Nat'"
-  "verification/proofs/idris2|ABI/Pointers.idr|quarantine|record projection .nonNull not accessible"
+  "verification/proofs/idris2|Types.idr|quarantine|Idris1-era template, never compiled. LTE needs Data.Nat, but that only unmasks the real bug: {auto 0 inBounds} is erased yet projected into a value position. Not a one-line fix"
+  "verification/proofs/idris2|ABI/Platform.idr|quarantine|LTE needs Data.Nat; then Undefined name lteRefl"
+  "verification/proofs/idris2|ABI/Layout.idr|quarantine|NonZero/modNatNZ need Data.Nat; then a genuine unification failure (S ?x vs f .fieldAlignment)"
+  "verification/proofs/idris2|ABI/Pointers.idr|quarantine|.nonNull declared at quantity 0 (erased) yet projected into a value position, plus a unification failure. Design decision needed, not a typo"
   "verification/proofs/idris2|ABI/Compliance.idr|quarantine|depends on quarantined ABI.Layout / ABI.Platform"
 )
 
