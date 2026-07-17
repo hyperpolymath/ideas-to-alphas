@@ -65,6 +65,14 @@ jobs:
       - name: Build & install Idris2 ${{ env.IDRIS2_VERSION }}
         run: |
           set -euo pipefail
+          # Build OUTSIDE the checkout. The proof gate sweeps the working tree for
+          # every *.idr and errors on any not in its manifest -- that breadth is
+          # the point (it is why an unlisted proof cannot go unnoticed). The Idris2
+          # source tarball ships hundreds of .idr files under libs/, benchmark/ and
+          # docs/; extracting it into the checkout makes the gate fail on the
+          # compiler's own sources. Keep the tree the gate scans clean.
+          build_dir="$(mktemp -d)"
+          cd "$build_dir"
           tarball="idris2-${IDRIS2_VERSION}.tar.gz"
           curl -fsSL -o "$tarball" \
             "https://codeload.github.com/idris-lang/Idris2/tar.gz/refs/tags/v${IDRIS2_VERSION}"
