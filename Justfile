@@ -1354,26 +1354,25 @@ proof-check-all: proof-check-idris2 proof-check-lean4 proof-check-agda proof-che
 proof-check-idris2:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "=== Checking Idris2 proofs ==="
-    if ! command -v idris2 &>/dev/null; then
-        echo "SKIP: idris2 not installed"
-        exit 0
-    fi
-    ERRORS=0
-    for f in $(find verification/proofs/idris2 -name '*.idr' 2>/dev/null); do
-        echo -n "  Checking $f ... "
-        if idris2 --check "$f" 2>/dev/null; then
-            echo "OK"
-        else
-            echo "FAIL"
-            ERRORS=$((ERRORS + 1))
-        fi
-    done
-    if [ "$ERRORS" -gt 0 ]; then
-        echo "FAIL: $ERRORS Idris2 proof(s) failed"
-        exit 1
-    fi
-    echo "PASS: All Idris2 proofs verified"
+    # Delegates to scripts/check-idris2-proofs.sh, which CI runs too, so a green
+    # `just proof-check-idris2` and a green CI mean the same thing.
+    #
+    # The recipe this replaced was unsound in three ways, and every one of them
+    # reported success or blamed the wrong file:
+    #   * `exit 0` when idris2 was absent ("SKIP: idris2 not installed"). idris2
+    #     WAS absent, so this recipe was green on every machine in the estate --
+    #     it passed *because* nothing could check the proofs.
+    #   * It passed a full path to `idris2 --check`, but Idris2 derives the
+    #     expected module name from the path it is given. Every module failed on
+    #     a name mismatch instead of its real error, and ABI/Foreign.idr -- which
+    #     genuinely compiles -- was reported FAIL while the broken
+    #     ABI/Compliance.idr was reported OK.
+    #   * It tested only the exit code. `idris2 --check` EXITS 0 on a missing
+    #     import while printing "Error: Module X not found", so an unresolvable
+    #     import read as a passing proof.
+    #   * It looked only in verification/proofs/idris2/, so research/ and
+    #     src/interface/ were invisible to it.
+    ./scripts/check-idris2-proofs.sh
 
 # Check Lean4 proofs
 proof-check-lean4:

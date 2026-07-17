@@ -9,11 +9,26 @@
 --         SUPERSEDED by SEMANTICS-DECISION.adoc (2026-07-16).  Do not extend this
 --         file; it needs the graded rewrite described in the checklist below.
 --
--- All proofs complete.  No believe_me, assert_total, or coercions remain.
--- Comonad laws (comonadLaw1, comonadLaw2) proved by Refl after case split.
+-- PROOF HISTORY — read before trusting any claim below.
+--
+-- Until 2026-07-16 this module DID NOT COMPILE AT ALL.  Idris2 0.7.0's Prelude
+-- exports `dup : a -> (a, a)`, so every signature mentioning `dup` failed with
+-- `Ambiguous elaboration: Modal.dup vs Prelude.dup`; comonadLaw1 and comonadLaw2
+-- got "No type declaration" and were checked by nothing.  This header claimed
+-- "All proofs complete" and STATE.a2ml recorded the laws as proved at 100%.
+-- Both were false.  It went unnoticed because Idris2 was never installed in this
+-- estate (IDRIS2_PREFIX and PACK_DIR pointed at a pack tree that did not exist),
+-- so `idris2 --check` had never been runnable locally -- and CI gates only
+-- a-sounder-constitution, not research/.
+--
+-- Fixed by the `%hide Prelude.dup` above.  The module now checks clean under
+-- Idris2 0.7.0 (`idris2 --check Modal.idr`, exit 0) with no believe_me,
+-- assert_total, or coercions, and comonadLaw1/comonadLaw2 are proved by Refl
+-- after a single case split -- genuinely, for the first time, as of 2026-07-16.
 --
 -- BUT those are the omega-instance laws ONLY.  QTT-INTEGRATION.adoc section 5
--- proves that `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r,
+-- proves -- and DupForcesOmega.idr machine-checks -- that
+-- `dup : Box a -> (Box a, Box a)` is admissible only where r + r = r,
 -- hence r in {0, omega}; and r = 0 is erased, so every useful instance pins
 -- r = omega.  `Box a` as written is therefore isomorphic to an L10 value at
 -- multiplicity omega: L11 adds NOTHING over L10 until `dup` is replaced by
@@ -34,6 +49,17 @@
 -- See MOTIVATION.adoc for the design rationale and open items.
 
 module Modal
+
+-- Idris2 0.7.0's Prelude exports `dup : a -> (a, a)` ("Function that duplicates
+-- its input").  Without this hide, every signature below that mentions `dup`
+-- fails with `Ambiguous elaboration: Modal.dup vs Prelude.dup`, the type
+-- declarations for comonadLaw1/comonadLaw2 never elaborate, and the whole module
+-- fails to check -- which is exactly what it did, unnoticed, until 2026-07-16.
+--
+-- The clash is not a coincidence.  Prelude.dup IS unrestricted duplication, and
+-- at grade omega that is precisely what this module's `dup` amounts to.  See
+-- DupForcesOmega.idr.
+%hide Prelude.dup
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Preamble: the QTT multiplicity semiring from L10
@@ -218,9 +244,14 @@ closePool pool = release pool
 --
 -- Before opening a PR on typell:
 --
--- [x] Prove comonadLaw1 and comonadLaw2 without believe_me  (done: Refl after case split)
---       QUALIFIED: the omega-instance laws only.  Must be re-derived at general r
---       once Box is graded.  See QTT-INTEGRATION.adoc s5.
+-- [x] Prove comonadLaw1 and comonadLaw2 without believe_me  (Refl after case split)
+--       TWICE QUALIFIED:
+--       (a) this only became TRUE on 2026-07-16.  Before the %hide fix the module
+--           did not elaborate, so the laws were never checked by anything -- while
+--           this checklist, the header, and STATE.a2ml all claimed they were.
+--       (b) they are the omega-instance laws only, and must be re-derived at
+--           general r once Box is graded.  See QTT-INTEGRATION.adoc s5.
+-- [x] Machine-check that ungraded dup pins r = omega   (DupForcesOmega.idr, exit 0)
 -- [x] Decide between S4 (global box) and contextual modal types
 --       DECIDED 2026-07-16: NEITHER.  The question was malformed — contextual
 --       refines *which variables*, graded refines *how many times*; they are

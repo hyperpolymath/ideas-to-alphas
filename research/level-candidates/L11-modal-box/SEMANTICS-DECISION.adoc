@@ -140,8 +140,16 @@ The checklist in `Modal.idr`, re-scored:
 | Item | State | Note
 
 | Prove `comonadLaw1`/`comonadLaw2` without `believe_me`
-| *done, qualified*
-| Sound, but only the `ω` instance. Must be re-derived at general `r`.
+| *done 2026-07-16, twice qualified*
+| Recorded as done since April, but the module *did not compile*: `dup` clashed with
+  Idris2 0.7.0's `Prelude.dup`, so the laws never elaborated and were checked by
+  nothing. Fixed via `%hide Prelude.dup` — now genuinely proved, and still only the
+  `ω` instance. See `QTT-INTEGRATION.adoc` §5 coda.
+
+| Machine-check that ungraded `dup` pins `r = ω`
+| *done*
+| `DupForcesOmega.idr`, Idris2 0.7.0, exit 0. Also supplies the `plus`/`mult` tables
+  `Multiplicity` never had.
 
 | Decide S4 vs contextual
 | *done*
@@ -164,12 +172,26 @@ The checklist in `Modal.idr`, re-scored:
 | —
 |===
 
-Honest summary: *2 of 6 done, 1 spec'd, 3 not started — and the spec added a
-seventh item (the rewrite).* Graduation is **not** close, and this decision moved
-it further away in calendar terms while moving it closer in truth. The
-`route-to-mvp` milestone "First graduated artefact promoted to typell" stays at 0%
-and should not move until `split` replaces `dup` and the laws are re-derived at
-general `r`.
+Honest summary: *2 of 6 done (one of them only as of today), 1 spec'd, 3 not
+started — and the spec added a seventh item (the rewrite).* Graduation is **not**
+close. This decision moved it further away in calendar terms while moving it
+closer in truth: one checklist item that was recorded as complete turned out never
+to have compiled, and the level's central construct turned out to be L10 in
+disguise. The `route-to-mvp` milestone "First graduated artefact promoted to
+typell" stays at 0% and should not move until `split` replaces `dup` and the laws
+are re-derived at general `r`.
+
+[IMPORTANT]
+.The meta-finding
+====
+The `dup`/`Prelude.dup` clash meant `Modal.idr` never compiled, yet it was recorded
+as proved at 100% for three months. The cause was not carelessness in the proof —
+it was that *nothing could check it*: Idris2 was never installed (`IDRIS2_PREFIX`
+and `PACK_DIR` pointed at a `pack` tree that did not exist), and CI gates only
+`a-sounder-constitution`, not `research/`. An unrunnable proof gate produces
+confident false records. Fix the gate before trusting any other research milestone
+in this repo.
+====
 
 === CMTT is shelved, not discarded
 
