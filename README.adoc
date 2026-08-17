@@ -1,0 +1,169 @@
+// SPDX-License-Identifier: MPL-2.0
+= Ideas to Alphas — The Type Theory Incubator
+:toc: preamble
+:toc-title: Contents
+:icons: font
+:doctype: article
+
+image:https://img.shields.io/badge/OpenSSF-BestPractices-green[link="https://www.bestpractices.dev/projects/XXXX"]
+
+The theory→practice incubator for the hyperpolymath type theory pipeline. Findings from the lab (Kategoria) are matured from idea to alpha here, before earning their own production repository.
+
+== Overview
+
+Ideas to Alphas is the middle stage of the type theory pipeline:
+
+    Kategoria  →  ideas-to-alphas  →  typell  →  typed-wasm  →  PanLL
+    (lab)         (this repo)         (kernel)    (target)      (eNSAID)
+
+Kategoria is upstream research and discovery. This repo is the incubator: proofs-of-concept, reading notes, prototype formalisations, and experimental definitions. Typell is downstream: the production verification kernel. Artefacts graduate from here to Typell when they are ready for integration.
+
+This is where the ceiling gets pushed. The current type-safety levels (L1–L10) were designed here first, then promoted. Future levels (L11, L12, …) will originate here.
+
+== What lives here
+
+* **Type theory prototypes** — Idris 2, Lean 4, Agda proofs-of-concept for speculative constructions.
+* **Research notes** — papers being read, formalised, and annotated.
+* **Experimental level definitions** — candidate type-safety levels beyond L10.
+* **Speculative session type extensions** — multi-party, probabilistic, temporal variants.
+* **Tropical type theory experiments** — connections to protocol-squisher and resource grading.
+* **Constitutional proofs** — `a-sounder-constitution/` (Idris 2 formalisation of soundness constraints).
+
+== What does NOT live here
+
+* **Production Rust code** — belongs in Typell.
+* **WasmGC type safety proofs** — belongs in `typed-wasm`.
+* **Anything with stability guarantees** — this repo is deliberately unstable. Artefacts here may be retracted, rewritten, or abandoned without notice.
+
+== Pipeline role
+
+[cols="1,2,2", options="header"]
+|===
+| Stage | Repository | Guarantees
+
+| Lab (discovery)
+| link:https://github.com/hyperpolymath/kategoria[Kategoria]
+| None. Research, falsification, stumble journal.
+
+| Incubator (idea → alpha)
+| **This repo**
+| Proof-of-concept compiles. No stability.
+
+| Kernel (production)
+| link:https://github.com/hyperpolymath/typell[Typell]
+| Soundness. ABI contract. No `believe_me`.
+
+| Target (deployment)
+| link:https://github.com/hyperpolymath/typed-wasm[typed-wasm]
+| WasmGC type safety. Browser/runtime target.
+
+| Environment (use)
+| link:https://github.com/hyperpolymath/panll[PanLL]
+| Cognitive relief. TEA architecture. Working UI.
+|===
+
+Coordination monorepo: `nextgen-typing`.
+
+== What is standard and what is ours
+
+[cols="1,2,2", options="header"]
+|===
+| Concept | Status | Home
+
+| Prototype Idris 2 / Lean 4 / Agda formalisations
+| Standard methodology
+| `research/`, `verification/`
+
+| Research reading notes
+| Standard practice
+| `research/`
+
+| The pipeline role (lab → incubator → kernel → target)
+| **Novel organisational pattern**
+| Estate architecture
+
+| Experimental type-safety level definitions
+| **Novel** (speculative)
+| `research/`
+
+| Graduation criterion (idea → alpha → production)
+| **Novel governance pattern**
+| Pipeline design
+|===
+
+== Known scope boundaries
+
+[CAUTION]
+====
+**Pre-alpha.** This repository is a research incubator. Its contents are speculative. Proofs-of-concept may be incorrect, incomplete, or abandoned. Nothing here carries stability guarantees.
+====
+
+[CAUTION]
+====
+**Mid-rename.** The GitHub repository and local directory are still named `kategoria-pipeline`. The rename to `ideas-to-alphas` is pending (`gh repo rename ideas-to-alphas`). See `dev-notes/2026-06-16-typing-sub-estate-roles-and-lifecycle.adoc`.
+====
+
+[CAUTION]
+====
+**No fixed ceiling on type-safety levels.** The L1–L10 framework is the current understanding. Future levels will originate here. The number of levels may grow, shrink, or restructure.
+====
+
+== Repository Layout
+
+[cols="1,3", options="header"]
+|===
+| Path | Purpose
+
+| `a-sounder-constitution/`
+| Idris 2 formalisation of soundness constraints
+
+| `research/`
+| Reading notes, paper formalisations, experimental definitions
+
+| `verification/`
+| Prototype proofs and proof-of-concept checkers
+
+| `silo/`
+| Secret-silo design (ALARP handle/vault incubation)
+
+| `src/`, `tests/`
+| Supporting source and test infrastructure
+
+| `docs/`
+| Research documentation and dev notes
+
+| `session/`
+| Speculative session type extensions
+
+| `features/`
+| Feature specifications for graduation candidates
+|===
+
+== Build
+
+[source,bash]
+----
+# Idris 2 proofs (a-sounder-constitution)
+cd a-sounder-constitution/
+idris2 --check Constitution.idr
+
+# General build (if Justfile targets exist)
+just check
+----
+
+See `QUICKSTART-DEV.adoc` for developer setup.
+
+== Documentation
+
+* link:EXPLAINME.adoc[EXPLAINME] — claim-by-claim receipts and known gaps
+* link:Glossary.adoc[Glossary] — terminology reference
+* `dev-notes/2026-06-16-typing-sub-estate-roles-and-lifecycle.adoc` — pipeline role definitions
+* `ROADMAP.adoc` — research roadmap
+* `PROOF-STATUS.md` — proof status tracking
+* `0-AI-MANIFEST.a2ml` — AI agent entry point
+
+== License
+
+SPDX-License-Identifier: MPL-2.0 — see link:LICENSE[LICENSE].
+
+Prose documentation is licensed under CC-BY-SA-4.0; see `LICENSES/`.
