@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Ideas to Alphas — Glossary
+:toc: preamble
+:toc-title: Contents
+:icons: font
+:doctype: article
+
+Cross-reference glossary for link:README.adoc[README.adoc], link:EXPLAINME.adoc[EXPLAINME.adoc], and the `ideas-to-alphas` wiki.
+
+== Pipeline concepts
+
+[[incubator]]
+Incubator (idea → alpha)::
+  The middle stage of the type theory pipeline: artefacts from Kategoria (lab) are matured from speculative idea to tested alpha before earning promotion to Typell (production kernel).
+  *Classification:* **project-specific** (governance pattern).
+
+[[graduation]]
+Graduation::
+  The promotion of an artefact from the incubator to a production repository. A human decision based on proof stability, downstream readiness, and review. Not automated.
+  *Classification:* **project-specific** (governance pattern).
+
+[[port-and-reprove]]
+Port-and-reprove::
+  The pattern where downstream repositories re-prove results in-site rather than importing from the incubator. Ensures production code does not depend on unstable research artefacts.
+  *Classification:* **project-specific** (estate pattern). Precedent: `typed-wasm/…/Tropical.idr`.
+
+[[type-theory-pipeline]]
+Type theory pipeline::
+  The end-to-end flow: Kategoria (lab) → ideas-to-alphas (incubator) → Typell (kernel) → typed-wasm (target) → PanLL (environment). Each stage has increasing stability guarantees.
+  *Classification:* **project-specific** (organisational architecture).
+
+== Artefact types
+
+[[proof-of-concept]]
+Proof-of-concept::
+  A formalisation that compiles and type-checks but may not cover all obligations, may use simplifying assumptions, and carries no stability guarantee. The standard artefact of the incubator.
+  *Classification:* **standard** (methodology).
+
+[[experimental-level]]
+Experimental type-safety level::
+  A candidate for a type-safety level beyond L10 (e.g., graded types, effect types, modal types). Defined speculatively here; may be retracted, merged, or promoted.
+  *Classification:* **project-specific** (speculative).
+
+[[research-note]]
+Research note::
+  Annotated reading notes on papers being formalised. Not publications; working documents for the incubator's own use.
+  *Classification:* **standard** (practice).
+
+== Specific artefacts
+
+[[a-sounder-constitution]]
+a-sounder-constitution::
+  An Idris 2 formalisation of soundness constraints for the type theory pipeline. A constitutional scaffold: a statement of what the pipeline intends to prove, with initial proof structure.
+  *Classification:* **project-specific** (proof-of-concept).
+
+[[silo]]
+silo (secret-silo)::
+  An incubated design for ALARP (as low as reasonably practicable) handle/vault secret management. Not yet promoted.
+  *Classification:* **project-specific** (incubated design).
+
+== Pronunciation guide
+
+[cols="1,2", options="header"]
+|===
+| Written | Spoken
+
+| ideas-to-alphas
+| "ideas to alphas"
+
+| kategoria-pipeline
+| "kategoria pipeline" (deprecated name)
+
+| a-sounder-constitution
+| "a sounder constitution"
+|===
