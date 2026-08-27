@@ -3,9 +3,6 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.2'
 workflows:
-    '.github/workflows/hypatia-scan.yml': []
-    '.github/workflows/rust-ci.yml': []
-    '.github/workflows/scorecard.yml': []
     '.github/workflows/boj-build.yml':
         - 'actions/checkout@v6.0.2'
     '.github/workflows/codeql.yml':
@@ -19,6 +16,7 @@ workflows:
         - 'hyperpolymath/k9-ecosystem@main'
     '.github/workflows/guix-nix-policy.yml':
         - 'actions/checkout@v6.0.2'
+    '.github/workflows/hypatia-scan.yml': []
     '.github/workflows/idris2-proof.yml':
         - 'actions/checkout@v6.0.2'
     '.github/workflows/instant-sync.yml':
@@ -48,6 +46,8 @@ workflows:
         - 'actions/checkout@v6.0.2'
     '.github/workflows/runtime-policy.yml':
         - 'actions/checkout@v6.0.2'
+    '.github/workflows/rust-ci.yml': []
+    '.github/workflows/scorecard.yml': []
     '.github/workflows/secret-scanner.yml':
         - 'actions/checkout@v6.0.2'
         - 'gitleaks/gitleaks-action@v2.3.9'
