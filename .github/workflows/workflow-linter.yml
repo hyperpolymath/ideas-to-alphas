@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
+# This workflow is managed by gh actions-lock.
+# This workflow is managed by gh actions-lock.
 # workflow-linter.yml - Validates GitHub workflows against RSR security standards
 # This workflow can be copied to other repos for consistent enforcement
 name: Workflow Security Linter
@@ -25,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v6.0.2
 
       - name: Check SPDX Headers
         run: |
@@ -44,7 +46,7 @@ jobs:
           fi
           echo "All workflows have SPDX headers"
 
-      - name: Check Permissions Declaration
+          - name: Check Permissions Declaration
         run: |
           echo "=== Checking Permissions ==="
           failed=0
@@ -57,12 +59,12 @@ jobs:
           done
           if [ $failed -eq 1 ]; then
             echo "Add 'permissions:
-  contents: read' at workflow level"
+          contents: read' at workflow level"
             exit 1
           fi
           echo "All workflows have permissions declared"
 
-      - name: Check SHA-Pinned Actions
+          - name: Check SHA-Pinned Actions
         run: |
           echo "=== Checking Action Pinning ==="
           # Find any uses: lines that don't have @SHA format
@@ -81,7 +83,7 @@ jobs:
           fi
           echo "All actions are SHA-pinned"
 
-      - name: Check for Duplicate Workflows
+          - name: Check for Duplicate Workflows
         run: |
           echo "=== Checking for Duplicates ==="
           # Known duplicate patterns
@@ -96,7 +98,7 @@ jobs:
           fi
           echo "No critical duplicates found"
 
-      - name: Check CodeQL Language Matrix
+          - name: Check CodeQL Language Matrix
         run: |
           echo "=== Checking CodeQL Configuration ==="
           if [ ! -f .github/workflows/codeql.yml ]; then
@@ -136,7 +138,7 @@ jobs:
 
           echo "CodeQL check complete"
 
-      - name: Check Secrets Guards
+          - name: Check Secrets Guards
         run: |
           echo "=== Checking Secrets Usage ==="
           # Look for secrets without conditional guards in mirror workflows
@@ -150,7 +152,7 @@ jobs:
           fi
           echo "Secrets check complete"
 
-      - name: Summary
+          - name: Summary
         run: |
           echo ""
           echo "=== Workflow Linter Summary ==="

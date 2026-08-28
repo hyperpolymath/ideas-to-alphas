@@ -1,0 +1,107 @@
+// SPDX-License-Identifier: MPL-2.0
+= Ideas to Alphas — EXPLAINME
+:toc: preamble
+:toc-title: Contents
+:icons: font
+:doctype: article
+
+This file backs every factual claim in link:README.adoc[README.adoc] with code paths and honest caveats. Read it if you are doing due diligence on whether the story matches the code.
+
+== Claim-to-implementation map
+
+=== This is the theory→practice incubator in the type theory pipeline
+
+[quote, README.adoc]
+____
+Findings from the lab (Kategoria) are matured from idea to alpha here, before earning their own production repository.
+____
+
+How this is implemented::
+The pipeline role is documented in `link:dev-notes/2026-06-16-typing-sub-estate-roles-and-lifecycle.adoc[]`. The repository contains prototype formalisations (Idris 2, Lean 4, Agda), research notes, and experimental definitions. No production code exists here; the graduation path to `typell` is by design, not by current automation.
+
+Caveat::
+**The pipeline is a governance pattern, not a CI pipeline.** There is no automated promotion from "idea" to "alpha" to "production." Graduation is a human decision based on review, proof stability, and downstream readiness.
+
+=== The L1–L10 framework was designed here first
+
+[quote, README.adoc]
+____
+The current L1-L10 implementation in typell was designed here first, then graduated.____
+
+How this is implemented::
+The historical record is in the git log and research notes. The type-safety level definitions originated as speculative research artefacts before being promoted to `typell`'s formal specification layer.
+
+Caveat::
+This is a provenance claim about the development history, not a mathematical claim. The levels themselves are assembled from standard type theory; the contribution is the 10-level framing and the progressive-safety architecture, not the individual levels.
+
+=== a-sounder-constitution contains an Idris 2 formalisation
+
+[quote, README.adoc]
+____a-sounder-constitution/: Idris 2 formalisation of soundness constraints____
+
+How this is implemented::
+`link:a-sounder-constitution/[]` contains Idris 2 modules. CI gates the proof with `idris2 --check` (see `.github/workflows/`). The formalisation addresses soundness constraints for the type theory pipeline.
+
+Caveat::
+This is a proof-of-concept, not a production proof. It may not cover all soundness obligations for the full pipeline. Its value is as a constitutional scaffold—a statement of what we intend to prove, with initial proof structure.
+
+=== This repo is deliberately unstable
+
+[quote, README.adoc]
+____Anything with stability guarantees — this repo is deliberately unstable.____
+
+How this is implemented::
+There is no versioning contract, no API stability guarantee, and no ABI freeze. Artefacts may be retracted or rewritten. The `PROOF-STATUS.md` and `ROADMAP.adoc` track what exists and what is speculative.
+
+Caveat::
+This is the correct stance for an incubator. Downstream repositories (`typell`, `typed-wasm`) must not depend on this repo at build time. Importing ideas from here is by port-and-reprove, not by dependency.
+
+== Known gaps
+
+[CAUTION]
+====
+**Pre-alpha with minimal content.** The repository was created 2026-04-11. Most directories contain scaffolding from `rsr-template-repo` rather than mature research artefacts. Substantive content is accumulating over time.
+====
+
+[CAUTION]
+====
+**Mid-rename.** The GitHub repository is still named `kategoria-pipeline`. The rename to `ideas-to-alphas` is documented but not executed. References to the old name may persist in CI, documentation, and cross-repo links.
+====
+
+[CAUTION]
+====
+**No automated graduation.** The idea→alpha→production pipeline is a governance pattern, not automated. There are no CI gates that promote artefacts or block premature promotion.
+====
+
+[CAUTION]
+====
+**Experimental levels are speculative.** Any candidate for L11+ defined here is a research hypothesis, not an accepted level. It may be retracted, merged with an existing level, or restructured.
+====
+
+== Evidence Index
+
+[cols="2,3", options="header"]
+|===
+| Path | Proves / Contains
+
+| `a-sounder-constitution/`
+| Idris 2 soundness constraint formalisation (proof-of-concept)
+
+| `research/`
+| Reading notes, paper formalisations, experimental definitions
+
+| `verification/`
+| Prototype proofs and proof-of-concept checkers
+
+| `silo/`
+| Secret-silo ALARP design incubation
+
+| `dev-notes/2026-06-16-typing-sub-estate-roles-and-lifecycle.adoc`
+| Pipeline role definitions and lifecycle
+
+| `PROOF-STATUS.md`
+| Proof status tracking
+
+| `ROADMAP.adoc`
+| Research roadmap
+|===
