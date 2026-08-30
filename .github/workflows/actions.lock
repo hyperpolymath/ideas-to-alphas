@@ -12,7 +12,7 @@ workflows:
         - 'dependabot/fetch-metadata@v2.2.0'
     '.github/workflows/dogfood-gate.yml':
         - 'actions/checkout@v4.3.1'
-        - 'hyperpolymath/a2ml-ecosystem@main'
+        - 'hyperpolymath/a2ml-ecosystem@c992d2882ee1e62bf5c78b5f9a1893a6a16730e4'
         - 'hyperpolymath/k9-ecosystem@main'
     '.github/workflows/guix-nix-policy.yml':
         - 'actions/checkout@v6.0.2'
@@ -21,6 +21,8 @@ workflows:
         - 'actions/checkout@v6.0.2'
     '.github/workflows/instant-sync.yml':
         - 'peter-evans/repository-dispatch@v4.0.1'
+    '.github/workflows/label-triage.yml': []
+    '.github/workflows/labels.yml': []
     '.github/workflows/mirror.yml':
         - 'actions/checkout@v6.0.2'
         - 'dtolnay/rust-toolchain@master'
@@ -141,9 +143,9 @@ dependencies:
         commit: 'sha1-ff98106e4c7b2bc287b24eaf42907196329070c7'
         owner_id: 90395851
         repo_id: 242854909
-    'hyperpolymath/a2ml-ecosystem@main':
+    'hyperpolymath/a2ml-ecosystem@c992d2882ee1e62bf5c78b5f9a1893a6a16730e4':
         ref: 'main'
-        commit: 'sha1-aa4b836bd969df2bc58128cb8e3d20bbc88d5e79'
+        commit: 'sha1-c992d2882ee1e62bf5c78b5f9a1893a6a16730e4'
         owner_id: 6759885
         repo_id: 1275649586
     'hyperpolymath/k9-ecosystem@main':

@@ -15,6 +15,7 @@ on:
     branches: [main, master]
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
@@ -41,7 +42,7 @@ jobs:
 
       - name: Validate A2ML manifests
         if: steps.detect.outputs.count > 0
-        uses: hyperpolymath/a2ml-ecosystem/validate-action@main
+        uses: hyperpolymath/a2ml-ecosystem/validate-action@c992d2882ee1e62bf5c78b5f9a1893a6a16730e4
         with:
           path: '.'
           strict: 'false'
