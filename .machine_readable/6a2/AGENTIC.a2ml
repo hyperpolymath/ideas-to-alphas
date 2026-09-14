@@ -23,8 +23,10 @@ can-create-files = true
 # - Never place state files in repository root (must be in .machine_readable/)
 # - Never relicense an existing file, and never run an automated licence
 #   sweep (LICENCE-POLICY.adoc A2). New files get correct SPDX from birth.
-# - Never assume a licence. Read standards/LICENCE-POLICY.adoc: Rule 1
-#   defaults to MPL-2.0 (code) / CC-BY-SA-4.0 (prose), but Rule 3
+# - Never assume a licence. Before creating a file, resolve the pinned policy
+#   with `git submodule update --init standards`, then read
+#   standards/LICENCE-POLICY.adoc. If it is unavailable, stop without creating
+#   the file. Rule 1 defaults to MPL-2.0 (code) / CC-BY-SA-4.0 (prose), but Rule 3
 #   (co-developed), Rule 4 (network-deployed services) and Rule 5
 #   (games) are AGPL-3.0-or-later, and Rule 2 names the PMPL register.
 
