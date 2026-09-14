@@ -48,7 +48,6 @@ workflows:
         - 'actions/checkout@v6.0.2'
     '.github/workflows/runtime-policy.yml':
         - 'actions/checkout@v6.0.2'
-    '.github/workflows/rust-ci.yml': []
     '.github/workflows/scorecard.yml': []
     '.github/workflows/secret-scanner.yml':
         - 'actions/checkout@v6.0.2'
