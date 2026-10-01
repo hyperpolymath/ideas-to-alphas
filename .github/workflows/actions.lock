@@ -49,10 +49,7 @@ workflows:
     '.github/workflows/runtime-policy.yml':
         - 'actions/checkout@v6.0.2'
     '.github/workflows/scorecard.yml': []
-    '.github/workflows/secret-scanner.yml':
-        - 'actions/checkout@v6.0.2'
-        - 'gitleaks/gitleaks-action@v2.3.9'
-        - 'trufflesecurity/trufflehog@v3.93.8'
+    '.github/workflows/secret-scanner.yml': []
     '.github/workflows/security-policy.yml':
         - 'actions/checkout@v6.0.2'
     '.github/workflows/static-analysis-gate.yml':
