@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+= Graduation rule — katagoria is an incubator, not a family
+:revdate: 2026-10-12
+
+An idea may live here as a sketch, a prototype, or a prover-agnostic
+scribble. It *leaves* only when a family repo (echo, choreographic, tropical,
+epistemic, occupancy, residual-evidence, secret) holds its core theorem
+kernel-checked under the family ruling (Agda `--safe --without-K`) with the
+six-item kit: a theorem a reader could bet against, a separation witness
+from its nearest sibling, reject controls, a laws census, one sibling
+connection discharged by import, and a PROOF-STATUS where prose and
+artefact agree. Until then its status here is DESIGNED at best, and this
+file is the only place that may say so.
+
+== Register
+
+[cols="1,2,1",options="header"]
+|===
+| Candidate | Where it stands | Status
+| L11 modal box | Superseded by the graded rewrite; the box modality now lives in epistemic-types `Kripke/` (indexed, with correspondences) | CLOSED — superseded, 2026-10-12
+| TropicalKleene (Idris) | Fourth formalisation of max-plus; the family instance is resource-algebra `MaxPlus` (Agda). Keep as the Idris runtime sketch, not as a proof | DESIGNED (runtime sketch)
+| Constitution formalisation | Prototype | DESIGNED
+|===
+
+PROOF-STATUS.adoc's "0 of 7" is therefore not a debt: an incubator carries
+no proof obligations of its own. The template ROADMAP is retired by this file.
