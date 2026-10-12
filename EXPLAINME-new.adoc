@@ -51,7 +51,7 @@ This is a proof-of-concept, not a production proof. It may not cover all soundne
 ____Anything with stability guarantees — this repo is deliberately unstable.____
 
 How this is implemented::
-There is no versioning contract, no API stability guarantee, and no ABI freeze. Artefacts may be retracted or rewritten. The `PROOF-STATUS.md` and `ROADMAP.adoc` track what exists and what is speculative.
+There is no versioning contract, no API stability guarantee, and no ABI freeze. Artefacts may be retracted or rewritten. The `PROOF-STATUS.md` tracks what exists and what is speculative.
 
 Caveat::
 This is the correct stance for an incubator. Downstream repositories (`typell`, `typed-wasm`) must not depend on this repo at build time. Importing ideas from here is by port-and-reprove, not by dependency.
@@ -102,6 +102,4 @@ This is the correct stance for an incubator. Downstream repositories (`typell`, 
 | `PROOF-STATUS.md`
 | Proof status tracking
 
-| `ROADMAP.adoc`
-| Research roadmap
 |===
