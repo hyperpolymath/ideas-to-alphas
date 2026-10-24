@@ -26,7 +26,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
 
       - name: Detect project type and build
         id: build
@@ -90,7 +90,7 @@ jobs:
       changelog: ${{ steps.cliff.outputs.content }}
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -134,7 +134,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
 
       # TODO: Download build artifacts if uploading to the release
       # - uses: actions/download-artifact@v4
