@@ -1,0 +1,7 @@
+{
+  "name": "ideas-to-alphas",
+  "private": true,
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}
