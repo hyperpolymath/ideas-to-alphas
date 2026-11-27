@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: MPL-2.0
+# package.json is pretty-printed so licence checks can read it; Prettier must not reformat it.
+package.json
